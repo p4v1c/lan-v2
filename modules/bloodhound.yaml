@@ -1,0 +1,26 @@
+id: bloodhound_collector
+name: BloodHound Collector
+category: Enumération
+description: ""
+inputs:
+  - name: domain
+    label: Domaine AD
+    placeholder: LAB.TRUSTED.VL
+  - name: username
+    label: Utilisateur
+    placeholder: rsmith
+  - name: password
+    label: Mot de passe
+    placeholder: password123
+  - name: nameserver
+    label: Serveur DNS (NS)
+    placeholder: 10.10.10.10
+  - name: dc_fqdn
+    label: FQDN du DC
+    placeholder: dc01.domain.local
+command: "bloodhound.py -d '{{domain}}' -u '{{username}}' -p '{{password}}' -ns {{nameserver}} -dc {{dc_fqdn}} -c all --zip"
+
+parsing:
+  mode: "line"
+  save_results: false
+  ip_extract: ".*"

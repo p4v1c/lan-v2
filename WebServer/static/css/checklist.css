@@ -1,0 +1,139 @@
+/* static/css/checklist.css */
+
+/* Conteneur principal plus étroit pour la lisibilité */
+.checklist-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding-bottom: 4rem;
+}
+
+/* --- BLOC CATÉGORIE --- */
+.category-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--bg-separator);
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.category-header {
+    background: var(--bg-body); /* Légèrement différent du card */
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--bg-separator);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cat-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex; align-items: center; gap: 10px;
+}
+
+.cat-stats {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* Barre de progression sous le header */
+.progress-track {
+    height: 4px;
+    background: var(--bg-separator);
+    width: 100%;
+}
+.progress-fill {
+    height: 100%;
+    background: var(--accent-color);
+    width: 0%;
+    transition: width 0.5s ease;
+}
+.progress-fill.completed { background: #10B981; }
+
+/* --- ITEMS (LIGNES) --- */
+.checklist-item {
+    display: flex;
+    align-items: flex-start; /* Aligne en haut si description longue */
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid var(--bg-separator);
+    transition: background 0.1s;
+    gap: 1.5rem;
+}
+
+.checklist-item:last-child { border-bottom: none; }
+.checklist-item:hover { background: var(--bg-hover); }
+
+/* Indicateur statut (carré à gauche) */
+.status-indicator {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: var(--bg-body);
+    border: 2px solid var(--bg-separator);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: transparent;
+    transition: all 0.2s;
+    margin-top: 2px; /* Alignement optique avec le titre */
+}
+
+.status-indicator.checked {
+    background: #10B981;
+    border-color: #10B981;
+    color: white;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+/* Contenu texte */
+.item-content {
+    flex: 1; /* Prend toute la place dispo */
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.25rem;
+}
+
+.item-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.item-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 85%;
+}
+
+/* Badges Cibles */
+.targets-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.target-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-family: 'Fira Code', monospace;
+    font-weight: 500;
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Icône check dans le carré */
+.status-indicator svg { width: 16px; height: 16px; stroke-width: 3px; }

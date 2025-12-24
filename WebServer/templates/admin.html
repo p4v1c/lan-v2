@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Administration - AlgoHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+<style>
+        .admin-card { background: var(--bg-card); border: 1px solid var(--bg-separator); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 2rem; }
+        .form-row { display: flex; gap: 10px; align-items: flex-end; }
+    </style>
+</head>
+<body data-theme="light">
+    
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="brand-title"><span>Algo</span>Hub</div>
+            <div class="nav-center">
+                <a href="/" class="nav-item">Scan</a>
+                <a href="/result" class="nav-item">Result</a>
+                <a href="/admin" class="nav-item active">Admin</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <a href="/logout" class="btn btn-outline" style="color:var(--danger); border-color:var(--danger);">Déconnexion</a>
+            <button id="theme-toggle" class="theme-toggle-btn">◑</button>
+        </div>
+    </nav>
+
+    <div id="ad-full-width-container" style="max-width: 1000px; margin: 0 auto;">
+        
+        <div class="section-header">
+            <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            Administration
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-msg flash-{{ category }}" style="margin-bottom: 1rem;">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="admin-card">
+            <h3 style="margin-bottom: 1.5rem; color: var(--accent-color);">Statistiques</h3>
+            <div style="display: flex; gap: 2rem; justify-content: space-around;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: bold;">{{ stats.users | default('N/A') }}</div>
+                    <div style="color: var(--text-light);">Utilisateurs</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: bold;">{{ stats.scans | default('N/A') }}</div>
+                    <div style="color: var(--text-light);">Scans Lancés</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2.5rem; font-weight: bold;">{{ stats.vulns | default('N/A') }}</div>
+                    <div style="color: var(--text-light);">Vulnérabilités</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <h3 style="margin-bottom: 1rem; color: var(--accent-color);">Gestion des Outils Externes</h3>
+            <div style="display: flex; gap: 2rem; align-items: center; justify-content: space-between;">
+                <div id="tools-status-container">
+                    <pre style="background: var(--bg-dark); padding: 1rem; border-radius: var(--radius-md); color: var(--text-main); white-space: pre-wrap;">{{ tools_status | default('Status inconnu...') | safe }}</pre>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <button id="start-tools-btn" class="btn" style="background: var(--success); color: white;">Démarrer les outils</button>
+                    <button id="stop-tools-btn" class="btn" style="background: var(--danger); color: white;">Arrêter les outils</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <h3 style="margin-bottom: 1rem; color: var(--accent-color);">Ajouter un utilisateur</h3>
+            <form action="/admin/add_user" method="POST" class="form-row">
+                <div style="flex:1;">
+                    <label style="font-size:0.8rem; font-weight:bold;">Username</label>
+                    <input type="text" name="username" class="form-input" required placeholder="ex: analyste">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:0.8rem; font-weight:bold;">Password</label>
+                    <input type="password" name="password" class="form-input" required placeholder="Mot de passe">
+                </div>
+                <div style="width: 150px;">
+                    <label style="font-size:0.8rem; font-weight:bold;">Rôle</label>
+                    <select name="role" class="form-input">
+                        <option value="user">Utilisateur</option>
+                        <option value="admin">Administrateur</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn" style="background: var(--success); color: white; height: 42px;">Ajouter</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Utilisateurs</h3>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Utilisateur</th>
+                            <th>Rôle</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td style="width: 50px;">{{ u[0] }}</td>
+                            <td style="font-weight: 600;">{{ u[1] }}</td>
+                            <td>
+                                {% if u[2] == 'admin' %}
+                                    <span class="badge badge-danger">ADMIN</span>
+                                {% else %}
+                                    <span class="badge badge-info">USER</span>
+                                {% endif %}
+                            </td>
+                            <td style="display: flex; gap: 10px; align-items: center;">
+                                <form action="/admin/reset_password" method="POST" style="display:flex; gap:5px;">
+                                    <input type="hidden" name="user_id" value="{{ u[0] }}">
+                                    <input type="text" name="new_password" class="form-input" placeholder="Nouveau pass..." style="width: 140px; padding: 4px 8px; font-size: 0.85rem;">
+                                    <button type="submit" class="btn btn-outline" style="padding: 4px 8px; font-size: 0.8rem;">Reset</button>
+                                </form>
+
+                                {% if u[1] != 'admin' and u[0] != current_user.id %}
+                                <form action="/admin/delete_user/{{ u[0] }}" method="POST" onsubmit="return confirm('Supprimer cet utilisateur ?');">
+                                    <button type="submit" class="btn btn-outline" style="color: var(--danger); border-color: var(--danger); padding: 4px 8px; font-size: 0.8rem;">🗑</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-card" style="border-color: var(--danger);">
+            <h3 style="margin-bottom: 1rem; color: var(--danger);">⛔ Danger Zone</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <p style="margin: 0; color: var(--text-light);">Cette action est irréversible et entraînera la perte de toutes les données.</p>
+                <form action="/admin/reset_db" method="POST" onsubmit="return confirm('Êtes-vous absolument sûr de vouloir réinitialiser la base de données ? Toutes les données seront perdues.');">
+                    <button type="submit" class="btn" style="background: var(--danger); color: white;">Reset Database</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startBtn = document.getElementById('start-tools-btn');
+            const stopBtn = document.getElementById('stop-tools-btn');
+
+            async function handleToolsAction(action) {
+                const btn = (action === 'start') ? startBtn : stopBtn;
+                btn.textContent = (action === 'start') ? 'Démarrage...' : 'Arrêt...';
+                btn.disabled = true;
+                stopBtn.disabled = true;
+                startBtn.disabled = true;
+
+                try {
+                    const response = await fetch(`/api/tools/${action}`, { method: 'POST' });
+                    if (!response.ok) {
+                        alert(`Erreur lors de l'action : ${action}. Status: ${response.status}`);
+                    }
+                    // Attendre un peu avant de recharger pour que les process se lancent/s'arrêtent
+                    setTimeout(() => window.location.reload(), 2000);
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    alert('Une erreur de communication est survenue.');
+                    btn.textContent = (action === 'start') ? 'Démarrer les outils' : 'Arrêter les outils';
+                    btn.disabled = false;
+                    stopBtn.disabled = false;
+                    startBtn.disabled = false;
+                }
+            }
+
+            if (startBtn) {
+                startBtn.addEventListener('click', () => handleToolsAction('start'));
+            }
+
+            if (stopBtn) {
+                stopBtn.addEventListener('click', () => handleToolsAction('stop'));
+            }
+        });
+    </script>
+</body>

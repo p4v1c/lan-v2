@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor - AlgoHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
+</head>
+<body data-theme="light">
+    
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="brand-title"><span>Algo</span>Hub</div>
+            <div class="nav-center">
+                <a href="/" class="nav-item {{ 'active' if active_page == 'scan' else '' }}">Scan</a>
+                <a href="/result" class="nav-item {{ 'active' if active_page == 'result' else '' }}">Result</a>
+                <a href="/editor" class="nav-item {{ 'active' if active_page == 'editor' else '' }}">Editor</a>
+                <a href="/vulns" class="nav-item {{ 'active' if active_page == 'vulns' else '' }}">Vulns</a>
+                <a href="/checklist" class="nav-item {{ 'active' if active_page == 'checklist' else '' }}">Checklist</a>
+                <a href="/note" class="nav-item {{ 'active' if active_page == 'note' else '' }}">Note</a>
+                <a href="/logs" class="nav-item {{ 'active' if active_page == 'logs' else '' }}">Logs</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <a href="/admin" class="nav-item" style="color: var(--danger);">Admin</a>
+            {% endif %}
+            <a href="http://localhost:1030" target="_blank" class="btn btn-outline">BloodHound</a>
+            <a href="http://localhost:7070" target="_blank" class="btn btn-outline">GoWitness</a>
+            <button id="theme-toggle" class="theme-toggle-btn">◑</button>
+        </div>
+    </nav>
+
+    <div id="ad-full-width-container" style="height: calc(100vh - 70px); padding: 1rem;">
+        
+        <div class="editor-layout">
+            
+            <div class="editor-sidebar card">
+                <div class="sidebar-header">
+                    <input type="text" id="file-search" placeholder="🔍 Filtrer..." class="sidebar-input">
+                    <button id="btn-new-file" class="btn btn-outline" title="Nouveau module">✚</button>
+                </div>
+                <div id="file-list" class="file-list-container">
+                    <div style="text-align:center; color:var(--text-muted); padding:1rem;">Chargement...</div>
+                </div>
+            </div>
+
+            <div class="editor-main card">
+                <div class="editor-toolbar">
+                    <div style="flex:1; display: flex; align-items: center; gap: 10px;">
+                        <span style="color:var(--text-secondary); font-size:0.9rem;">Fichier :</span>
+                        <input type="text" id="filename-input" placeholder="nom_module.yaml" class="filename-input">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="btn-delete" class="btn btn-outline" style="color:var(--danger); border-color:var(--danger); display:none;">🗑 Supprimer</button>
+                        <button id="btn-save" class="btn" style="background:var(--success); color:white;">💾 Sauvegarder</button>
+                    </div>
+                </div>
+                
+                <div class="editor-container">
+                    <textarea id="code-editor" class="code-textarea" spellcheck="false"></textarea>
+                </div>
+                
+                <div id="editor-status" class="status-bar">Prêt.</div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+</body>
+</html>

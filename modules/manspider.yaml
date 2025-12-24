@@ -1,0 +1,19 @@
+id: manspider_scan
+name: Manspider (File Search)
+category: "6. Exploitation"
+description: "Recherche de mots de passe dans les fichiers partagés."
+checklist_keys: ["manspider"]
+inputs:
+  - name: target
+    label: Cible (IP/CIDR)
+    placeholder: 10.3.10.0/24
+  - name: domain
+    label: Domaine
+    placeholder: north.sevenkingdoms.local
+  - name: username
+    label: Utilisateur
+    placeholder: arya.stark
+  - name: password
+    label: Mot de passe
+    placeholder: Needle
+command: "manspider.py {{target}} -d {{domain}} -u '{{username}}' -p '{{password}}' -t 20 --content password passwd pwd mdp 'mot de passe' admin root login secret credential apikey --extensions conf ini xml yaml json ps1 py sh bat cmd vbs env cmd config cfg -l ./manspider "

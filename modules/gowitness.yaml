@@ -1,0 +1,21 @@
+id: gowitness_nmap
+name: GoWitness (Nmap Scan)
+checklist_keys: ["gowitness"]
+category: Enumération
+description: ""
+inputs:
+  - name: xml_path
+    label: "Fichier XML Nmap"
+    placeholder: /workspace/nmap_result.xml
+    default: /workspace/scan.xml
+  - name: output_path
+    label: "Dossier de sortie (Screenshots)"
+    placeholder: /workspace/screenshots
+    default: /workspace/screenshots
+# On ajoute --db-uri pour que ça alimente la base utilisée par le serveur GoWitness
+command: "gowitness scan nmap -f {{xml_path}} -s {{output_path}} --write-db --open-only --db-uri sqlite:///workspace/gowitness.sqlite3"
+
+parsing:
+  mode: "line"
+  save_results: false # On ne pollue pas l'onglet résultat, on consulte via le serveur GoWitness
+  ip_extract: ".*"

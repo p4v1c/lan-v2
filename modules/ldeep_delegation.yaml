@@ -1,0 +1,41 @@
+id: Enum delegations
+name: Enum Delegations
+category: Enumération
+checklist_keys: ["ad_delegations"] # <--- AJOUTER ICI
+description: ""
+inputs:
+  - name: domain
+    label: "Domaine"
+    placeholder: north.sevenkingdoms.local
+  - name: dc_ip
+    label: "IP du DC"
+    placeholder: 10.3.10.11
+  - name: username
+    label: Utilisateur
+    placeholder: user
+  - name: password
+    label: Mot de passe
+    placeholder: password
+command: "ldeep ldap -s ldap://{{dc_ip}} -d {{domain}} -u '{{username}}' -p '{{password}}' delegations -v"
+
+parsing:
+  mode: "json"
+  key_ip: "sAMAccountName" 
+  
+  fields:
+    - "msDS-AllowedToDelegateTo"                # Pour Constrained Delegation
+    - "msDS-AllowedToActOnBehalfOfOtherIdentity" # Pour RBCD
+    - "servicePrincipalName"                    # Pour info générale
+
+  rules:
+    - name: "RBCD (Resource-Based Constrained Delegation)"
+      condition_key: "msDS-AllowedToActOnBehalfOfOtherIdentity"
+      check_existence: true
+      
+    - name: "Unconstrained Delegation"
+      condition_key: "userAccountControl"
+      condition_value: "TRUSTED_FOR_DELEGATION"
+      
+    - name: "Constrained Delegation"
+      condition_key: "msDS-AllowedToDelegateTo"
+      check_existence: true

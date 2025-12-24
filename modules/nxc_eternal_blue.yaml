@@ -1,0 +1,25 @@
+id: nxc_ms17_010
+name: NetExec MS17-010 (EternalBlue)
+category: Exploitation
+description: "Détecte la faille critique MS17-010 (EternalBlue)."
+checklist_keys: ["cve_ms17_010"] # <--- AJOUTER ICI
+inputs:
+  - name: target
+    label: Cible (IP/CIDR)
+    placeholder: 10.3.10.0/24
+  - name: username
+    label: Utilisateur
+    placeholder: guest
+  - name: password
+    label: Mot de passe
+    placeholder: password
+command: "nxc smb {{target}} -u '{{username}}' -p '{{password}}' -M ms17-010"
+
+parsing:
+  mode: "text"
+  ip_extract: "\\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b"
+  
+  rules:
+    - name: "Vulnérable à EternalBlue (MS17-010)"
+      regex: "Vulnerable"
+      badge: "🔴 [CRITIQUE]"

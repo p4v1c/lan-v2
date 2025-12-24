@@ -1,0 +1,23 @@
+id: nxc_ftp_anon
+name: FTP Anonymous
+category: "2. Accès Anonymes"
+description: "Test du compte 'anonymous' sur FTP."
+checklist_keys: ["anon_ftp"]
+inputs:
+  - name: target
+    label: Cible (IP/CIDR)
+    placeholder: 10.3.10.0/24
+command: "nxc ftp {{target}} -u 'anonymous' -p 'anonymous'"
+
+parsing:
+  mode: "line"
+  ip_extract: "\\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b"
+  
+  rules:
+    - name: "FTP Anonyme Activé"
+      regex: "\\[\\+\\]"
+      badge: "🟠 [MOYEN]"
+    
+    - name: "Échec Login"
+      regex: "STATUS_LOGIN_FAILURE"
+      badge: "✅ [SECURE]"

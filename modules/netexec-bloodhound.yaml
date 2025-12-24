@@ -1,0 +1,23 @@
+id: nxc_bloodhound
+name: NetExec BloodHound
+category: Backup
+description: ""
+inputs:
+  - name: target
+    label: Cible (IP DC)
+    placeholder: 10.10.202.37
+  - name: username
+    label: Utilisateur
+    placeholder: Rhys.Garner
+  - name: password
+    label: Mot de passe
+    placeholder: knh1gJ8Xmeq+uP
+  - name: nameserver
+    label: Serveur DNS (NS)
+    placeholder: 10.10.202.37
+command: "nxc ldap {{target}} -u '{{username}}' -p '{{password}}' --bloodhound --collection All --dns-server {{nameserver}}"
+
+parsing:
+  mode: "line"
+  save_results: false
+  ip_extract: ".*"

@@ -1,0 +1,12 @@
+/* static/css/result.css */
+.tree-container { padding: 1rem; overflow-y: auto; height: 100%; }
+details > summary { list-style: none; cursor: pointer; padding: 8px 12px; background: var(--bg-hover); border-radius: 6px; margin-bottom: 5px; font-weight: 600; display: flex; align-items: center; transition: background 0.2s; }
+details > summary::before { content: '▸'; display: inline-block; margin-right: 8px; transition: transform 0.2s; }
+details[open] > summary::before { transform: rotate(90deg); }
+details > summary:hover { background: var(--bg-separator); }
+.tree-child { margin-left: 20px; padding: 5px 0; border-left: 1px solid var(--bg-separator); padding-left: 15px; }
+.result-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; color: var(--text-secondary); }
+.result-item:hover { background: rgba(59, 130, 246, 0.1); color: var(--accent-color); }
+.result-item.active { background: var(--accent-subtle); color: var(--accent-color); font-weight: 600; }
+.log-viewer-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-hover); border-bottom: 1px solid var(--bg-separator); }
+.log-content { flex: 1; background: #0F111A; color: #76FF03; padding: 1.5rem; font-family: 'Fira Code', monospace; overflow: auto; white-space: pre-wrap; font-size: 0.9rem; }

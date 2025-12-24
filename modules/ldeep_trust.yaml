@@ -1,0 +1,43 @@
+id: ldeep_trusts
+name: LDEEP Trusts
+category: Enumération
+checklist_keys: ["ad_trusts"]   # <--- AJOUTER ICI
+description: ""
+inputs:
+  - name: domain
+    label: "Domaine"
+    placeholder: north.sevenkingdoms.local
+  - name: dc_ip
+    label: "IP du DC"
+    placeholder: 10.3.10.11
+  - name: username
+    label: Utilisateur
+    placeholder: user
+  - name: password
+    label: Mot de passe
+    placeholder: password
+command: "ldeep ldap -s ldap://{{dc_ip}} -d {{domain}} -u '{{username}}' -p '{{password}}' trusts"
+
+parsing:
+  mode: "text" 
+  
+  rules:
+    - name: "Partenaire de Confiance"
+      regex: "trustPartner: .+"
+      badge: "🤝 [TRUST]"
+
+    - name: "Direction"
+      regex: "trustDirection: .+"
+      badge: "↔️ [SENS]"
+
+    - name: "Type de Trust"
+      regex: "trustType: .+"
+      badge: "⚙️ [TYPE]"
+
+    - name: "Attributs"
+      regex: "trustAttributes: .+"
+      badge: "📝 [ATTRS]"
+
+    - name: "Nom NetBIOS"
+      regex: "flatName: .+"
+      badge: "🏷️ [NETBIOS]"

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Notes - AlgoHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/note.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body data-theme="dark">
+    
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="brand-title"><span>Algo</span>Hub</div>
+            <div class="nav-center">
+                <a href="/" class="nav-item {{ 'active' if active_page == 'scan' else '' }}">Scan</a>
+                <a href="/result" class="nav-item {{ 'active' if active_page == 'result' else '' }}">Result</a>
+                <a href="/editor" class="nav-item {{ 'active' if active_page == 'editor' else '' }}">Editor</a>
+                <a href="/vulns" class="nav-item {{ 'active' if active_page == 'vulns' else '' }}">Vulns</a>
+                <a href="/checklist" class="nav-item {{ 'active' if active_page == 'checklist' else '' }}">Checklist</a>
+                <a href="/note" class="nav-item {{ 'active' if active_page == 'note' else '' }}">Note</a>
+                <a href="/logs" class="nav-item {{ 'active' if active_page == 'logs' else '' }}">Logs</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <a href="/admin" class="nav-item" style="color: var(--danger);">Admin</a>
+            {% endif %}
+            <a href="http://localhost:1030" target="_blank" class="btn btn-outline">BloodHound</a>
+            <a href="http://localhost:7070" target="_blank" class="btn btn-outline">GoWitness</a>
+            <button id="theme-toggle" class="theme-toggle-btn">◑</button>
+        </div>
+    </nav>
+
+    <div id="ad-full-width-container">
+        
+        <div class="section-header" style="max-width: 1200px; margin: 0 auto 1.5rem auto; justify-content: space-between;">
+            
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <div style="font-size: 1.25rem; font-weight: 700;">Bloc-notes (Markdown)</div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span id="note-status" class="badge badge-success" style="opacity:0; transition:opacity 0.5s;">Sauvegardé</span>
+                
+                <div class="toggle-container">
+                    <button id="btn-mode-edit" class="toggle-btn active">
+                        <svg style="width:14px;height:14px;margin-right:5px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        Edit
+                    </button>
+                    <button id="btn-mode-view" class="toggle-btn">
+                        <svg style="width:14px;height:14px;margin-right:5px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        View
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="max-width: 1200px; margin: 0 auto; height: calc(100vh - 180px);">
+            
+            <div class="card-body" style="padding: 0; position: relative; height: 100%;">
+                
+                <textarea id="note-textarea" class="note-textarea" placeholder="# Titre du rapport..."></textarea>
+                
+                <div id="note-preview" class="note-preview" style="display: none;"></div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/note.js') }}"></script>
+</body>
+</html>

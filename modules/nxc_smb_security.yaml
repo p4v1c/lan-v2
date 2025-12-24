@@ -1,0 +1,37 @@
+id: nxc_smb_security
+name: SMB Security (v1 & Signing)
+category: Enumération
+description: "Vérifie SMBv1 (Dangereux) et SMB Signing (Relay)."
+checklist_keys: ["sec_smb"]     # <--- AJOUTER ICI
+inputs:
+  - name: target
+    label: Cible (IP/CIDR)
+    placeholder: 10.3.10.0/24
+  - name: username
+    label: Utilisateur
+    placeholder: guest
+  - name: password
+    label: Mot de passe
+    placeholder: password
+command: "nxc smb {{target}} -u '{{username}}' -p '{{password}}'"
+
+parsing:
+  mode: "text" # NOUVEAU MODE
+  ip_extract: "\\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b"
+  
+  rules:
+    - name: "SMB Signing Désactivé (Relay Possible !)"
+      regex: "signing:False"
+      badge: "🔴 [DANGER]"
+    
+    - name: "SMB Signing Activé (Safe)"
+      regex: "signing:True"
+      badge: "✅ [OK]"
+
+    - name: "SMBv1 Activé (EternalBlue ?)"
+      regex: "SMBv1:True"
+      badge: "🔴 [CRITIQUE]"
+      
+    - name: "SMBv1 Désactivé"
+      regex: "SMBv1:False"
+      badge: "✅ [OK]"

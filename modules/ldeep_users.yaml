@@ -1,0 +1,25 @@
+id: ldeep_users_wordlist
+name: LDEEP Users Wordlist
+category: Enumération
+checklist_keys: ["ad_users"]    # <--- AJOUTER ICI
+description: ""
+inputs:
+  - name: domain
+    label: Domaine
+    placeholder: north.sevenkingdoms.local
+  - name: dc_ip
+    label: IP du DC
+    placeholder: 10.3.10.11
+  - name: username
+    label: Utilisateur
+    placeholder: guest
+  - name: password
+    label: Mot de passe
+    placeholder: password
+
+command: "ldeep ldap -s ldap://{{dc_ip}} -d {{domain}} -u '{{username}}' -p '{{password}}' users > /workspace/users.txt"
+
+parsing:
+  mode: "line"
+  save_results: false 
+  ip_extract: ".*"

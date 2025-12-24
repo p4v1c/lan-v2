@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Checklist Red Team - AlgoHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/checklist.css') }}">
+</head>
+<body data-theme="dark">
+    
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="brand-title"><span>Algo</span>Hub</div>
+            <div class="nav-center">
+                <a href="/" class="nav-item {{ 'active' if active_page == 'scan' else '' }}">Scan</a>
+                <a href="/result" class="nav-item {{ 'active' if active_page == 'result' else '' }}">Result</a>
+                <a href="/editor" class="nav-item {{ 'active' if active_page == 'editor' else '' }}">Editor</a>
+                <a href="/vulns" class="nav-item {{ 'active' if active_page == 'vulns' else '' }}">Vulns</a>
+                <a href="/checklist" class="nav-item {{ 'active' if active_page == 'checklist' else '' }}">Checklist</a>
+                <a href="/note" class="nav-item {{ 'active' if active_page == 'note' else '' }}">Note</a>
+                <a href="/logs" class="nav-item {{ 'active' if active_page == 'logs' else '' }}">Logs</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <a href="/admin" class="nav-item" style="color: var(--danger);">Admin</a>
+            {% endif %}
+            <a href="http://localhost:1030" target="_blank" class="btn btn-outline">BloodHound</a>
+            <a href="http://localhost:7070" target="_blank" class="btn btn-outline">GoWitness</a>
+            <button id="theme-toggle" class="theme-toggle-btn">◑</button>
+        </div>
+    </nav>
+
+    <div id="ad-full-width-container">
+        
+        <div class="section-header" style="max-width: 1200px; margin: 0 auto 2rem auto;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                <div style="font-size: 1.25rem; font-weight: 700;">Méthodologie d'Audit</div>
+            </div>
+            <div style="font-size: 0.9rem; color: var(--text-muted);">Suivi temps réel des actions effectuées.</div>
+        </div>
+
+        <div id="checklist-wrapper" class="checklist-container">
+            </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/checklist.js') }}"></script>
+</body>
+</html>

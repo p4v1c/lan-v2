@@ -1,0 +1,19 @@
+id: nxc_ssh_default
+name: SSH Default Creds
+category: "2. Accès Anonymes"
+description: "Test de logins par défaut sur SSH."
+checklist_keys: ["anon_ssh"]
+inputs:
+  - name: target
+    label: Cible (IP/CIDR)
+    placeholder: 10.3.10.0/24
+command: "nxc ssh {{target}} -u root admin user -p root admin password user 123456"
+
+parsing:
+  mode: "line"
+  ip_extract: "\\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b"
+  
+  rules:
+    - name: "Compte SSH Compromis"
+      regex: "\\[\\+\\]"
+      badge: "🔴 [CRITIQUE]"

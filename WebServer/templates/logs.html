@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Logs - AlgoHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/logs.css') }}">
+</head>
+<body data-theme="light">
+    
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="brand-title"><span>Algo</span>Hub</div>
+            <div class="nav-center">
+                <a href="/" class="nav-item {{ 'active' if active_page == 'scan' else '' }}">Scan</a>
+                <a href="/result" class="nav-item {{ 'active' if active_page == 'result' else '' }}">Result</a>
+                <a href="/editor" class="nav-item {{ 'active' if active_page == 'editor' else '' }}">Editor</a>
+                <a href="/vulns" class="nav-item {{ 'active' if active_page == 'vulns' else '' }}">Vulns</a>
+                <a href="/checklist" class="nav-item {{ 'active' if active_page == 'checklist' else '' }}">Checklist</a>
+                <a href="/note" class="nav-item {{ 'active' if active_page == 'note' else '' }}">Note</a>
+                <a href="/logs" class="nav-item {{ 'active' if active_page == 'logs' else '' }}">Logs</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <a href="/admin" class="nav-item" style="color: var(--danger);">Admin</a>
+            {% endif %}
+            <a href="http://localhost:1030" target="_blank" class="btn btn-outline">BloodHound</a>
+            <a href="http://localhost:7070" target="_blank" class="btn btn-outline">GoWitness</a>
+            <button id="theme-toggle" class="theme-toggle-btn">◑</button>
+        </div>
+    </nav>
+
+    <div id="ad-full-width-container">
+        <div class="section-header">
+            <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Historique des Commandes
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem; justify-content: space-between; align-items: center;">
+            <div style="flex-grow: 1; position: relative;">
+                <input type="text" id="logs-search" placeholder="Rechercher..." style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--bg-separator); background: var(--bg-card); color: var(--text-primary);">
+            </div>
+            
+            <button id="logs-sort-btn" class="btn btn-outline" style="min-width: 160px;">
+                📅 Date : <span id="sort-indicator">DESC ⬇️</span>
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-body" style="padding: 0;">
+                <table class="clean-table" id="logs-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 200px;">Date / Heure</th>
+                            <th>Commande Exécutée</th>
+                            <th style="width: 150px; text-align: center;">Détails</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table-body">
+                        <tr><td colspan="3" style="text-align:center; padding: 2rem;">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="log-output-modal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 900px; height: 80vh;">
+            <div class="modal-header">
+                <span class="modal-title">Résultat de la commande</span>
+                <button class="close-modal-btn" id="close-log-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="background-color: #0F111A; color: #E2E8F0; display:flex; flex-direction:column;">
+                <div style="margin-bottom: 1rem; border-bottom: 1px solid #2F354F; padding-bottom: 0.5rem;">
+                    <span style="color: #64748B;">$ </span> 
+                    <code id="modal-cmd-title" style="color: var(--accent-color); font-weight:bold; font-size: 1.1rem;"></code>
+                </div>
+                <pre id="modal-cmd-output" style="flex-grow:1; overflow: auto; font-family: 'Fira Code', monospace; font-size: 0.9rem; color: #76FF03; white-space: pre-wrap;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/logs.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+/* static/css/login.css */
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: var(--bg-body);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+    background-color: var(--bg-card);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--bg-separator);
+    text-align: center;
+}
+
+.brand-logo {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+}
+
+.brand-logo span { 
+    color: var(--accent-color); 
+}
+
+.form-group { 
+    margin-bottom: 1.5rem; 
+    text-align: left; 
+}
+
+.form-label { 
+    display: block; 
+    margin-bottom: 0.5rem; 
+    color: var(--text-secondary); 
+    font-size: 0.9rem; 
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--bg-separator);
+    background: var(--bg-body);
+    color: var(--text-primary);
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.form-input:focus { 
+    border-color: var(--accent-color); 
+}
+
+.btn-login {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: opacity 0.2s;
+}
+
+.btn-login:hover { 
+    opacity: 0.9; 
+}
+
+.flash-msg {
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+}
+
+.flash-error { 
+    background: var(--danger-subtle); 
+    color: var(--danger); 
+}
+
+.flash-success { 
+    background: var(--success-subtle); 
+    color: var(--success); 
+}

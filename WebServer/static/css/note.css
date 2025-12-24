@@ -1,0 +1,144 @@
+/* static/css/note.css */
+
+/* --- LAYOUT --- */
+.card-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* --- BOUTONS TOGGLE --- */
+.toggle-container {
+    background: var(--bg-hover);
+    padding: 3px;
+    border-radius: 6px;
+    display: flex;
+    border: 1px solid var(--bg-separator);
+}
+
+.toggle-btn {
+    background: transparent;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex; align-items: center;
+    transition: all 0.2s;
+}
+
+.toggle-btn:hover { color: var(--text-primary); }
+
+.toggle-btn.active {
+    background: var(--bg-card);
+    color: var(--accent-color);
+    box-shadow: var(--shadow-sm);
+}
+
+/* --- EDITEUR (Textarea) --- */
+.note-textarea {
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 2rem;
+    background: var(--bg-body); /* Fond légèrement différent du container */
+    color: var(--text-primary);
+    font-family: 'Fira Code', monospace; /* Police monospace pour l'édition */
+    font-size: 0.95rem;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+}
+
+/* --- PREVIEW (Rendu Markdown) --- */
+.note-preview {
+    width: 100%;
+    height: 100%;
+    padding: 2rem;
+    overflow-y: auto;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.7;
+}
+
+/* Styles Markdown spécifiques */
+.note-preview h1, 
+.note-preview h2, 
+.note-preview h3 {
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+}
+
+.note-preview h1 { 
+    font-size: 2rem; 
+    border-bottom: 1px solid var(--bg-separator); 
+    padding-bottom: 0.5rem; 
+    color: var(--accent-color);
+}
+.note-preview h2 { font-size: 1.5rem; }
+.note-preview h3 { font-size: 1.25rem; }
+
+.note-preview p { margin-bottom: 1rem; }
+
+.note-preview ul, 
+.note-preview ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+.note-preview a {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+.note-preview a:hover { text-decoration: underline; }
+
+/* Code blocks style Obsidian */
+.note-preview pre {
+    background: #11141D; /* Fond sombre code */
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    border: 1px solid var(--bg-separator);
+}
+
+.note-preview code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+    color: #E2E8F0; /* Code clair sur fond sombre */
+}
+
+/* Inline code (`code`) */
+.note-preview p code, 
+.note-preview li code {
+    background: var(--bg-hover);
+    color: var(--accent-color);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.note-preview blockquote {
+    border-left: 4px solid var(--accent-color);
+    padding-left: 1rem;
+    margin-left: 0;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+    font-style: italic;
+    background: var(--bg-hover);
+    padding: 1rem;
+    border-radius: 0 6px 6px 0;
+}
+
+.note-preview hr {
+    border: 0;
+    height: 1px;
+    background: var(--bg-separator);
+    margin: 2rem 0;
+}

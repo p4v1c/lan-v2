@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Scan - AlgoHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Styles inline pour les filtres si le CSS n'est pas encore mis à jour */
+        .filter-btn {
+            background: transparent;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover {
+            color: var(--text-primary);
+            background-color: rgba(0,0,0,0.05);
+        }
+        .filter-btn.active {
+            background-color: var(--bg-card);
+            color: var(--accent-color);
+            box-shadow: var(--shadow-sm);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body data-theme="light">
+    
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="brand-title"><span>Algo</span>Hub</div>
+            <div class="nav-center">
+                <a href="/" class="nav-item {{ 'active' if active_page == 'scan' else '' }}">Scan</a>
+                <a href="/result" class="nav-item {{ 'active' if active_page == 'result' else '' }}">Result</a>
+                <a href="/editor" class="nav-item {{ 'active' if active_page == 'editor' else '' }}">Editor</a>
+                <a href="/vulns" class="nav-item {{ 'active' if active_page == 'vulns' else '' }}">Vulns</a>
+                <a href="/checklist" class="nav-item {{ 'active' if active_page == 'checklist' else '' }}">Checklist</a>
+                <a href="/note" class="nav-item {{ 'active' if active_page == 'note' else '' }}">Note</a>
+                <a href="/logs" class="nav-item {{ 'active' if active_page == 'logs' else '' }}">Logs</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <a href="/admin" class="nav-item" style="color: var(--danger);">Admin</a>
+            {% endif %}
+            <a href="http://localhost:1030" target="_blank" class="btn btn-outline">BloodHound</a>
+            <a href="http://localhost:7070" target="_blank" class="btn btn-outline">GoWitness</a>
+            <button id="theme-toggle" class="theme-toggle-btn">◑</button>
+        </div>
+    </nav>
+
+    <div id="ad-full-width-container" style="padding: 1rem;">
+        
+        <div class="scan-layout" style="display:flex; height:calc(100vh - 100px); gap:1rem; overflow:hidden;">
+            
+            <div class="col-modules" style="width:280px; display:flex; flex-direction:column; background:var(--bg-card); border:1px solid var(--bg-separator); border-radius:var(--radius-md);">
+                
+                <div style="padding:1rem 1rem 0.5rem 1rem;">
+                    <input type="text" id="module-search" placeholder="🔍 Rechercher..." 
+                           style="width:100%; padding:0.5rem; border-radius:6px; border:1px solid var(--bg-separator); background:var(--bg-body); color:var(--text-primary);">
+                </div>
+
+                <div id="category-filters" class="category-bar">
+                    </div>
+                <div style="height: 1px; background: var(--bg-separator); margin: 0 1rem;"></div>
+
+                <div id="modules-list" style="overflow-y:auto; flex:1;">
+                    </div>
+            </div>
+
+            <div class="col-main" style="flex:1; display:flex; flex-direction:column; background:var(--bg-card); border:1px solid var(--bg-separator); border-radius:var(--radius-md); overflow:hidden;">
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-hover); border-bottom:1px solid var(--bg-separator); padding-right: 10px;">
+                    <div id="tabs-container" class="tab-bar" style="border-bottom:none; flex:1;"></div>
+                    
+                    <div style="display:flex; align-items:center; gap: 10px;">
+                        
+                        <div class="mode-filters" style="display:flex; background:var(--bg-body); border-radius:6px; padding:2px; border:1px solid var(--bg-separator);">
+                            <button class="filter-btn active" onclick="setModeFilter('all')" title="Tout afficher">All</button>
+                            <button class="filter-btn" onclick="setModeFilter('manual')" title="Commandes uniques">Manual</button>
+                            <button class="filter-btn" onclick="setModeFilter('auto')" title="Workflows">Auto</button>
+                        </div>
+
+                        <button id="global-vars-btn" title="Variables Globales" style="background:transparent; border:none; cursor:pointer; color:var(--text-secondary); padding:5px; border-radius:4px;">
+                            <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="active-tab-content" style="flex:1; overflow-y:auto; padding:0; background:#0F111A;">
+                    <div style="padding:2rem; text-align:center; color:#64748B;">
+                        Sélectionnez un onglet et lancez un module depuis la gauche.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="module-config-modal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 500px; height: auto; max-height: 80vh;">
+            <div class="modal-header">
+                <span class="modal-title" id="config-modal-title">Configurer</span>
+                <button class="close-modal-btn" id="close-config-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="config-inputs-container" style="display:flex; flex-direction:column; gap:15px;"></div>
+            </div>
+            <div style="padding:1.5rem; border-top:1px solid var(--bg-separator); display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn btn-outline" id="cancel-run-btn">Annuler</button>
+                <button class="btn" style="background:var(--success); color:white;" id="confirm-run-btn">▶ Lancer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="vars-modal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 600px;">
+            <div class="modal-header">
+                <span class="modal-title">Variables Globales (Env & Modules)</span>
+                <button class="close-modal-btn" id="close-vars-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:flex; gap:10px; margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid var(--bg-separator);">
+                    <input type="text" id="new-var-key" placeholder="Nom (ex: target)" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--bg-separator); background:var(--bg-body); color:var(--text-primary);">
+                    <input type="text" id="new-var-val" placeholder="Valeur (ex: 10.10.10.10)" style="flex:2; padding:8px; border-radius:6px; border:1px solid var(--bg-separator); background:var(--bg-body); color:var(--text-primary);">
+                    <button class="btn" id="add-var-btn" style="background:var(--accent-color); color:white;">+</button>
+                </div>
+                <div id="vars-list" style="display:flex; flex-direction:column; gap:10px;">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="live-shell-modal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 900px; height: 80vh;">
+            <div class="modal-header" style="background: #1A1D2E; color: white;">
+                <span id="live-shell-title" style="font-family: monospace;">>_ Terminal</span>
+                <button class="close-modal-btn" id="close-live-shell" style="color: white;">&times;</button>
+            </div>
+            <div class="modal-body" style="background: #0F111A; padding:0; display:flex; flex-direction:column; overflow:hidden;">
+                <pre id="live-shell-output" style="flex:1; overflow-y:auto; padding:1rem; color:#76FF03; margin:0; white-space:pre-wrap; font-family:'Fira Code', monospace;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <button id="webshell-toggle" class="webshell-fab">
+        <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+    </button>
+    <div id="webshell-container" class="webshell-drawer">
+        <div class="webshell-header">
+            <span>Terminal Système</span>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="webshell-expand" class="theme-toggle-btn">⛶</button>
+                <button id="webshell-close" class="close-modal-btn">&times;</button>
+            </div>
+        </div>
+        <div class="webshell-body" id="terminal-output"></div>
+        <div class="webshell-input-area">
+            <span class="prompt">></span>
+            <input type="text" id="terminal-input" autocomplete="off">
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

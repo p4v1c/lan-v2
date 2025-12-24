@@ -1,0 +1,19 @@
+id: nmap_fast
+name: Nmap Fast Scan
+category: Enumération
+checklist_keys: ["enum_ports"]  # <--- AJOUTER ICI
+description: "Scan rapide des ports communs (Génère XML pour GoWitness)."
+inputs:
+  - name: target
+    label: Cible (IP/CIDR)
+    placeholder: 192.168.1.0/24
+  - name: xml_file
+    label: "Fichier de sortie XML"
+    placeholder: /workspace/scan.xml
+    default: /workspace/scan.xml
+command: "nmap -p 80,443,8080,8443,3000,5000,88,445,139,53,135,5985,5986,3389,1433 -sT --open -oX {{xml_file}} {{target}}"
+
+parsing:
+  mode: "block"
+  ip_extract: "\\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b"
+  block_separator: "regex:Nmap scan report for"

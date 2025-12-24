@@ -1,0 +1,83 @@
+id: certipy_find
+name: "ADCS Vuln"
+category: Active Directory
+description: ""
+checklist_keys: ["adcs_enum"]   # <--- AJOUTER ICI
+inputs:
+  - name: domain
+    label: "Domaine"
+    placeholder: north.sevenkingdoms.local
+  - name: username
+    label: "Utilisateur"
+    placeholder: arya.stark
+  - name: password
+    label: Mot de passe
+    placeholder: Needle
+  - name: dc_ip
+    label: IP du DC
+    placeholder: 10.3.10.11
+command: "certipy find -u '{{username}}'@{{domain}} -p '{{password}}' -dc-ip {{dc_ip}} -vulnerable -stdout"
+
+parsing:
+  mode: "text"
+  # Le parser rangera tout sous l'IP cible (DC)
+  
+  rules:
+    # --- INFO CA (Ce que tu as demandé) ---
+    - name: "Autorité de Certification (CA)"
+      regex: "CA Name"
+      badge: "🆔 [CA]"
+
+    - name: "Serveur Hébergeant le CA"
+      regex: "DNS Name"
+      badge: "🌐 [SERVER]"
+
+    - name: "Web Enrollment (Vecteur ESC8)"
+      regex: "Web Enrollment\\s*:\\s*Enabled"
+      badge: "🔌 [WEB ENROLL]"
+
+    # --- INFO TEMPLATES ---
+    - name: "Template Vulnérable Trouvé"
+      regex: "Template Name"
+      badge: "📄 [TEMPLATE]"
+
+    # --- VULNERABILITÉS (Détails) ---
+    - name: "ESC1 : Escalade (Enrollee Supplies Subject)"
+      regex: "ESC1"
+      badge: "🔴 [CRITIQUE]"
+
+    - name: "ESC2 : Escalade (Any Purpose)"
+      regex: "ESC2"
+      badge: "🔴 [CRITIQUE]"
+
+    - name: "ESC3 : Enrollment Agent"
+      regex: "ESC3"
+      badge: "🔴 [CRITIQUE]"
+
+    - name: "ESC4 : ACLs Modifiables sur Template"
+      regex: "ESC4"
+      badge: "🔴 [CRITIQUE]"
+
+    - name: "ESC6 : SAN Injection (EDITF_ATTRIBUTESUBJECTALTNAME2)"
+      regex: "ESC6"
+      badge: "🔴 [CRITIQUE]"
+
+    - name: "ESC7 : Contrôle du CA (ACLs)"
+      regex: "ESC7"
+      badge: "🔴 [CRITIQUE]"
+
+    - name: "ESC8 : NTLM Relay vers AD CS (HTTP)"
+      regex: "ESC8"
+      badge: "🔴 [CRITIQUE]"
+
+    - name: "ESC9 : No Security Extension"
+      regex: "ESC9"
+      badge: "🟠 [ELEVÉ]"
+
+    - name: "ESC11 : NTLM Relay via RPC (IFIO)"
+      regex: "ESC11"
+      badge: "🔴 [CRITIQUE]"
+
+    - name: "ESC13 : OID Group Link Abuse"
+      regex: "ESC13"
+      badge: "🟠 [ELEVÉ]"

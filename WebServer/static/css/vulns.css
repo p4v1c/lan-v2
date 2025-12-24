@@ -1,0 +1,6 @@
+/* static/css/vulns.css */
+.search-bar-container { display: flex; gap: 10px; margin-bottom: 2rem; background: var(--bg-card); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--bg-separator); box-shadow: var(--shadow-sm); }
+.vuln-row { transition: background 0.2s; }
+.vuln-row:hover { background-color: var(--bg-hover); }
+.details-box { font-family: 'Fira Code', monospace; font-size: 0.85rem; background: #0F111A; color: #76FF03; padding: 10px; border-radius: 6px; white-space: pre-wrap; word-break: break-all; max-height: 150px; overflow-y: auto; display: none; margin-top: 10px; }
+.show-details-btn { background: none; border: none; color: var(--accent-color); cursor: pointer; font-size: 0.8rem; text-decoration: underline; }

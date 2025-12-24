@@ -1,0 +1,30 @@
+id: clean_ntlm_reflection
+name: Cleanup NTLM Reflection
+category: Exploitation
+description: "Supprime l'enregistrement DNS spécifique (localhost1UWh...)."
+inputs:
+  - name: dc_ip
+    label: "IP du DC"
+    placeholder: 10.3.10.11
+  - name: attacker_ip
+    label: "IP utilisée lors de l'attaque"
+    placeholder: 10.3.10.1
+  - name: domain
+    label: "Domaine"
+    placeholder: north.sevenkingdoms.local
+  - name: username
+    label: "Utilisateur"
+    placeholder: arya.stark
+  - name: password
+    label: "Mot de passe"
+    placeholder: Needle
+
+command: "dnstool.py -u '{{domain}}\\{{username}}' -p '{{password}}' {{dc_ip}} -r 'localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA' -a remove -d {{attacker_ip}}"
+
+parsing:
+  mode: "text"
+  save_results: false
+  rules:
+    - name: "Suppression OK"
+      regex: "successfully"
+      badge: "🧹 [CLEANED]"

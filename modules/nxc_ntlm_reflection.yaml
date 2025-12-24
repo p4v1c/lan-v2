@@ -1,0 +1,24 @@
+id: nxc_ntlm_reflection
+name: NetExec NTLM Reflection
+category: Enumération
+description: "Vérifie si la cible est vulnérable à la réflexion NTLM (MS08-068)."
+inputs:
+  - name: target
+    label: Cible (IP/CIDR)
+    placeholder: 10.3.10.11
+  - name: username
+    label: Utilisateur
+    placeholder: guest
+  - name: password
+    label: Mot de passe
+    placeholder: password
+command: "nxc smb {{target}} -u '{{username}}' -p '{{password}}' -M ntlm_reflection"
+
+parsing:
+  mode: "text"
+  ip_extract: "\\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b"
+  
+  rules:
+    - name: "Vulnérable à la réflexion NTLM"
+      regex: "Vulnerable"
+      badge: "🔴 [VULNERABLE]"
