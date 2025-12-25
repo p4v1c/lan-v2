@@ -17,9 +17,14 @@
         <div class="nav-left">
             <div class="brand-title"><span>Algo</span>Hub</div>
             <div class="nav-center">
-                <a href="/" class="nav-item">Scan</a>
-                <a href="/result" class="nav-item">Result</a>
-                <a href="/admin" class="nav-item active">Admin</a>
+                <a href="/" class="nav-item {{ 'active' if active_page == 'scan' else '' }}">Scan</a>
+                <a href="/result" class="nav-item {{ 'active' if active_page == 'result' else '' }}">Result</a>
+                <a href="/editor" class="nav-item {{ 'active' if active_page == 'editor' else '' }}">Editor</a>
+                <a href="/vulns" class="nav-item {{ 'active' if active_page == 'vulns' else '' }}">Vulns</a>
+                <a href="/checklist" class="nav-item {{ 'active' if active_page == 'checklist' else '' }}">Checklist</a>
+                <a href="/note" class="nav-item {{ 'active' if active_page == 'note' else '' }}">Note</a>
+                <a href="/logs" class="nav-item {{ 'active' if active_page == 'logs' else '' }}">Logs</a>
+                <a href="/admin" class="nav-item active {{ 'active' if active_page == 'Admin' else '' }}">Admin</a>
             </div>
         </div>
         <div class="nav-right">
