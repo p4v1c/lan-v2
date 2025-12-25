@@ -205,7 +205,7 @@ class TaskService:
             
             log_path, content_db = row
             
-            if log_path and Path(log_file).exists():
+            if log_path and Path(log_path).exists():
                 return Path(log_path).read_text(encoding="utf-8", errors="replace")
             
             if content_db:
