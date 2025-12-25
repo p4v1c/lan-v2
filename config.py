@@ -25,7 +25,7 @@ GOWITNESS_PORT = 7070
 # ======================================================
 # CONFIGURATION PENTEST (EXEGOL)
 # ======================================================
-PENTEST_CONTAINER = "exegol-Lan"
+PENTEST_CONTAINER = os.getenv("PENTEST_CONTAINER", "exegol-Lan")
 
 # ======================================================
 # CONFIGURATION DOCKER (PostgreSQL & pgAdmin)
