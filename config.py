@@ -25,7 +25,7 @@ GOWITNESS_PORT = 7070
 # ======================================================
 # CONFIGURATION PENTEST (EXEGOL)
 # ======================================================
-PENTEST_CONTAINER = os.getenv("PENTEST_CONTAINER", "exegol-Lan")
+PENTEST_CONTAINER = os.getenv("PENTEST_CONTAINER", "exegol-Kraken")
 
 # ======================================================
 # CONFIGURATION DOCKER (PostgreSQL & pgAdmin)
@@ -43,3 +43,4 @@ PG_DB = os.getenv("PG_DB", "algo")
 
 PGADMIN_EMAIL = os.getenv("PGADMIN_EMAIL", "admin@admin.fr")
 PGADMIN_PASSWORD = os.getenv("PGADMIN_PASSWORD", "admin1234")
+

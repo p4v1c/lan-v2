@@ -9,14 +9,9 @@ services:
       - .:/app
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     environment:
-      - FLASK_APP=WebServer/server.py
-      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
-      - PG_USER=${PG_USER}
-      - PG_PASSWORD=${PG_PASSWORD}
-      - PG_DB=${PG_DB}
+      - PENTEST_CONTAINER
 
   db:
     image: postgres:16
