@@ -93,3 +93,34 @@ You can modify these values in `config.py` or override them using environment va
     -   `WebServer/server.py`: Flask application entry point.
     -   `WebServer/static/`: Static files (CSS, JS).
     -   `WebServer/templates/`: HTML templates for the web dashboard.
+
+## Common Issues
+
+### Docker Client/Daemon API Version Mismatch
+
+**Error Message:**
+```
+Error response from daemon: client version 1.52 is too new. Maximum supported API version is 1.41
+```
+
+**Explanation:**
+This error occurs when your Docker client (the `docker` command in your terminal) is a newer version than your Docker daemon (the Docker server process running in the background). The client is trying to use a newer API version (e.g., 1.52) that the older daemon doesn't support (e.g., maximum supported is 1.41).
+
+**Temporary Workaround:**
+You can tell your Docker client to use an older API version by setting the `DOCKER_API_VERSION` environment variable. This will only affect your current terminal session.
+
+```bash
+export DOCKER_API_VERSION=1.41 # Replace 1.41 with the maximum supported API version from your error message
+```
+After setting this, try your Docker command again. For a more permanent temporary fix, add this line to your shell's configuration file (e.g., `~/.bashrc`, `~/.zshrc`).
+
+**Permanent Solution:**
+The best long-term solution is to upgrade your Docker daemon to a version that supports a newer API. This typically involves updating your Docker installation. The exact steps depend on your operating system and Docker installation method.
+
+For most Linux distributions, you would update your `docker-ce` package. For example, on Ubuntu/Debian:
+```bash
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl restart docker
+```
+Ensure that `docker-compose-plugin` is installed, as AlgoHub relies on Docker Compose. After upgrading and restarting Docker, your client and daemon should be in sync.
