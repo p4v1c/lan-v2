@@ -1,7 +1,7 @@
-id: nmap_fast
+id: test
 name: Nmap Fast Scan
 category: Enumération
-checklist_keys: ["enum_ports"]
+checklist_keys: ["enum_ports"]  # <--- AJOUTER ICI
 description: "Scan rapide des ports communs (Génère XML pour GoWitness)."
 inputs:
   - name: target
@@ -11,7 +11,7 @@ inputs:
     label: "Fichier de sortie XML"
     placeholder: /workspace/scan.xml
     default: /workspace/scan.xml
-command: "nmap -p 80,443,8080,8443,3000,5000,88,445,139,53,135,5985,5986,3389,1433de -sT --open -oX {{xml_file}} {{target}}"
+command: "nmap -p 80,443,8080,8443,3000,5000,88,445,139,53,135,5985,5986,3389,1433dede -sT --open -oX {{xml_file}} {{target}}"
 
 parsing:
   mode: "block"

@@ -9,6 +9,26 @@ AlgoHub is a Flask-based web application designed to manage and orchestrate vari
 -   **Database Integration**: Utilizes PostgreSQL for storing scan results, configurations, and other project data.
 -   **Containerized Environment**: Services run in isolated Docker containers for consistency and ease of deployment.
 -   **Customizable Pentesting Containers**: Supports specifying a custom pentesting container (e.g., Exegol) for module execution.
+-   **Advanced Vulnerability Search**: A powerful search syntax to filter vulnerabilities with precision. You can combine multiple conditions using logical operators.
+    -   **Syntax**: `element.<field> <operator> "<value>"`
+    -   **Fields**:
+        -   `ip`: The IP address of the host.
+        -   `title`: The title of the vulnerability.
+        -   `details`: The details of the vulnerability.
+        -   `module`: The module that found the vulnerability.
+        -   `severity`: The severity of the vulnerability (`Low`, `Medium`, `High`, `Critical`).
+        -   `vuln`: A special field that searches in both `title` and `details`.
+    -   **Operators**:
+        -   `=` or `==` or `===`: Exact match (case-insensitive for text fields).
+        -   `!=` or `!==`: Not equal.
+        -   `~`: Contains (case-insensitive).
+    -   **Logical Operators**:
+        -   `&`: AND
+        -   `|`: OR
+    -   **Examples**:
+        -   `element.ip = "192.168.1.10"`
+        -   `element.title ~ "http" & element.severity = "High"`
+        -   `element.vuln ~ "SQL Injection" | element.vuln ~ "XSS"`
 
 ## Prerequisites
 Before running AlgoHub, ensure you have the following installed:

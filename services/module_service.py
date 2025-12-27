@@ -4,7 +4,8 @@ from config import MODULES_DIR
 
 class ModuleService:
     def __init__(self):
-        self.modules = self._load_modules()
+        # Les modules sont maintenant chargés à la demande pour refléter les changements en temps réel.
+        pass
 
     def _load_modules(self):
         modules = []
@@ -13,7 +14,7 @@ class ModuleService:
 
         for f in MODULES_DIR.rglob("*.yaml"):
             try:
-                with open(f) as yf:
+                with open(f, 'r', encoding='utf-8') as yf:
                     data = yaml.safe_load(yf)
                     if data and 'id' in data:
                         if 'steps' in data:
@@ -21,12 +22,16 @@ class ModuleService:
                         else:
                             data['mode'] = 'manual'
                         modules.append(data)
-            except Exception:
-                pass
+            except Exception as e:
+                # Il est préférable de logger l'erreur pour le débogage
+                print(f"Erreur lors du chargement du module {f.name}: {e}")
         return modules
 
     def list_modules(self):
-        return self.modules
+        """Charge et retourne la liste à jour des modules."""
+        return self._load_modules()
 
     def get_module(self, module_id):
-        return next((m for m in self.modules if m["id"] == module_id), None)
+        """Charge les modules et retourne celui qui correspond à l'ID."""
+        modules = self._load_modules()
+        return next((m for m in modules if m["id"] == module_id), None)

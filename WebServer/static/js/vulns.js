@@ -59,6 +59,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
     };
 
+    window.downloadCSV = function() {
+        const query = document.getElementById('search-input').value;
+        const severity = document.getElementById('severity-select').value;
+        const url = `/api/vulns/export/csv?q=${encodeURIComponent(query)}&severity=${encodeURIComponent(severity)}`;
+        window.location.href = url;
+    };
+
+    function escapeHtml(text) {
+        if (text === null || text === undefined) {
+            return "";
+        }
+        var map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
     // 2. EXÉCUTION : Maintenant on peut l'utiliser sans erreur
     if(input) {
         input.addEventListener('keypress', (e) => { 

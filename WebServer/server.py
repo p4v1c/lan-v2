@@ -1,10 +1,13 @@
 import sys
 import os
 import logging
+import re
 import subprocess
 from collections import deque
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, flash
+import io
+import csv
+from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, flash, make_response
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -322,23 +325,93 @@ def search_vulns():
             SELECT id, host_ip, title, severity, module_source, details, 
                    to_char(created_at, 'YYYY-MM-DD HH24:MI') as date
             FROM vulnerabilities 
-            WHERE 1=1
         """
         params = []
+        where_conditions = []
 
         if severity_filter != 'All':
-            sql += " AND severity = %s"
+            where_conditions.append("severity = %s")
             params.append(severity_filter)
 
-        if query_text:
-            sql += """ AND (
+        # Si la nouvelle syntaxe de recherche est utilisée
+        if 'element.' in query_text:
+            field_map = {
+                "ip": "host_ip", "title": "title", "details": "details",
+                "module": "module_source", "severity": "severity", "vuln": None
+            }
+            expr_pattern = re.compile(r'element\.(\w+)\s*([=~!]+)\s*"([^"]*)"', re.IGNORECASE)
+            
+            processed_query = query_text.replace('&', ' AND ').replace('|', ' OR ')
+            tokens = re.split(r' (AND|OR) ', processed_query)
+            
+            query_parts = []
+            query_params = []
+
+            for token in tokens:
+                token = token.strip()
+                if not token: continue
+                
+                if token.upper() in ["AND", "OR"]:
+                    query_parts.append(token.upper())
+                else:
+                    match = expr_pattern.match(token)
+                    if not match:
+                        return jsonify({'error': f'Expression invalide : {token}'}), 400
+                    
+                    field, op, value = match.groups()
+                    field = field.lower()
+
+                    if field not in field_map:
+                        return jsonify({'error': f'Champ invalide : {field}'}), 400
+                    
+                    if field == 'vuln':
+                        if op == '~':
+                            query_parts.append("(title ILIKE %s OR details ILIKE %s)")
+                            query_params.extend([f"%{value}%", f"%{value}%"])
+                        elif op in ['=', '==', '===']:
+                            query_parts.append("(title = %s OR details = %s)")
+                            query_params.extend([value, value])
+                        elif op in ['!=', '!==']:
+                            query_parts.append("(title != %s AND details != %s)")
+                            query_params.extend([value, value])
+                        else:
+                            return jsonify({'error': f'Opérateur non supporté pour "vuln": {op}'}), 400
+                        continue
+
+                    db_field = field_map[field]
+                    
+                    if op == '~':
+                        sql_op = "ILIKE"
+                        param_value = f"%{value}%"
+                    elif op in ['=', '==', '===']:
+                        sql_op = "ILIKE" if db_field in ['title', 'details', 'module_source'] else "="
+                        param_value = value
+                    elif op in ['!=', '!==']:
+                        sql_op = "NOT ILIKE" if db_field in ['title', 'details', 'module_source'] else "!="
+                        param_value = value
+                    else:
+                        return jsonify({'error': f'Opérateur non supporté : {op}'}), 400
+                    
+                    query_parts.append(f"{db_field} {sql_op} %s")
+                    query_params.append(param_value)
+            
+            if query_parts:
+                where_conditions.append("(" + " ".join(query_parts) + ")")
+                params.extend(query_params)
+
+        # Ancien mode de recherche pour les requêtes simples
+        elif query_text:
+            where_conditions.append("""(
                 host_ip ILIKE %s OR 
                 title ILIKE %s OR 
                 details ILIKE %s OR 
                 module_source ILIKE %s
-            )"""
+            )""")
             wildcard = f"%{query_text}%"
             params.extend([wildcard, wildcard, wildcard, wildcard])
+
+        if where_conditions:
+            sql += " WHERE " + " AND ".join(where_conditions)
 
         sql += " ORDER BY created_at DESC LIMIT 100"
 
@@ -348,19 +421,14 @@ def search_vulns():
         results = []
         for r in rows:
             results.append({
-                "id": r[0],
-                "ip": r[1],
-                "title": r[2],
-                "severity": r[3],
-                "module": r[4],
-                "details": r[5],
-                "date": r[6]
+                "id": r[0], "ip": r[1], "title": r[2], "severity": r[3],
+                "module": r[4], "details": r[5], "date": r[6]
             })
 
         return jsonify(results)
 
     except Exception as e:
-        print(f"❌ Erreur Search Vulns: {e}")
+        logging.error(f"❌ Erreur Search Vulns: {e}")
         return jsonify({'error': str(e)}), 500
     finally:
         if conn: conn.close()
@@ -384,6 +452,113 @@ def get_vuln_details(vuln_id):
         return jsonify({'output': 'Détails introuvables.'})
     except Exception as e:
         return jsonify({'output': f'Erreur lecture détail: {e}'})
+
+@app.route('/api/vulns/export/csv', methods=['GET'])
+@login_required
+def export_vulns_csv():
+    """Exporte les vulnérabilités filtrées au format CSV."""
+    query_text = request.args.get('q', '').strip()
+    severity_filter = request.args.get('severity', 'All')
+
+    conn = get_db_connection(silent=True)
+    if not conn:
+        return "Database connection error", 500
+
+    try:
+        cur = conn.cursor()
+        
+        sql = "SELECT host_ip, severity, title, details, module_source, to_char(created_at, 'YYYY-MM-DD HH24:MI') FROM vulnerabilities"
+        params = []
+        where_conditions = []
+
+        if severity_filter != 'All':
+            where_conditions.append("severity = %s")
+            params.append(severity_filter)
+
+        if 'element.' in query_text:
+            field_map = {
+                "ip": "host_ip", "title": "title", "details": "details",
+                "module": "module_source", "severity": "severity", "vuln": None
+            }
+            expr_pattern = re.compile(r'element\.(\w+)\s*([=~!]+)\s*"([^"]*)"', re.IGNORECASE)
+            processed_query = query_text.replace('&', ' AND ').replace('|', ' OR ')
+            tokens = re.split(r' (AND|OR) ', processed_query)
+            
+            query_parts = []
+            query_params = []
+
+            for token in tokens:
+                token = token.strip()
+                if not token: continue
+                
+                if token.upper() in ["AND", "OR"]:
+                    query_parts.append(token.upper())
+                else:
+                    match = expr_pattern.match(token)
+                    if not match: continue
+                    
+                    field, op, value = match.groups()
+                    field = field.lower()
+
+                    if field not in field_map: continue
+                    
+                    if field == 'vuln':
+                        if op == '~':
+                            query_parts.append("(title ILIKE %s OR details ILIKE %s)")
+                            query_params.extend([f"%{value}%", f"%{value}%"])
+                        elif op in ['=', '==', '===']:
+                            query_parts.append("(title = %s OR details = %s)")
+                            query_params.extend([value, value])
+                        elif op in ['!=', '!==']:
+                            query_parts.append("(title != %s AND details != %s)")
+                            query_params.extend([value, value])
+                    else:
+                        db_field = field_map[field]
+                        if op == '~':
+                            sql_op, param_value = "ILIKE", f"%{value}%"
+                        elif op in ['=', '==', '===']:
+                            sql_op, param_value = ("ILIKE", value) if db_field in ['title', 'details', 'module_source'] else ("=", value)
+                        elif op in ['!=', '!==']:
+                            sql_op, param_value = ("NOT ILIKE", value) if db_field in ['title', 'details', 'module_source'] else ("!=", value)
+                        else: continue
+                        query_parts.append(f"{db_field} {sql_op} %s")
+                        query_params.append(param_value)
+            
+            if query_parts:
+                where_conditions.append("(" + " ".join(query_parts) + ")")
+                params.extend(query_params)
+
+        elif query_text:
+            where_conditions.append("(host_ip ILIKE %s OR title ILIKE %s OR details ILIKE %s OR module_source ILIKE %s)")
+            wildcard = f"%{query_text}%"
+            params.extend([wildcard, wildcard, wildcard, wildcard])
+
+        if where_conditions:
+            sql += " WHERE " + " AND ".join(where_conditions)
+        sql += " ORDER BY severity, host_ip"
+
+        cur.execute(sql, tuple(params))
+        rows = cur.fetchall()
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['IP', 'Severity', 'Title', 'Details', 'Source Module', 'Date'])
+        writer.writerows(rows)
+        
+        output.seek(0)
+        
+        response = make_response(output.getvalue())
+        response.headers["Content-Disposition"] = "attachment; filename=vulnerabilities.csv"
+        response.headers["Content-type"] = "text/csv"
+        
+        return response
+
+    except Exception as e:
+        logging.error(f"❌ Erreur Export CSV: {e}")
+        return "Error generating CSV", 500
+    finally:
+        if conn: conn.close()
+
 
 # =========================================================
 # 9. API NOTES & LOGS (PROTÉGÉES)
@@ -604,10 +779,15 @@ def _is_safe_path(filename):
         if not filename.endswith('.yaml'):
             return False, None
         
-        target = (MODULES_DIR / filename).resolve()
-        # Vérifie que target est bien un enfant de MODULES_DIR
-        if MODULES_DIR.resolve() in target.parents:
-            return True, target
+        base_dir = MODULES_DIR.resolve()
+        # Le chemin de la cible est résolu pour éviter les attaques par traversée de répertoire (../)
+        target_path = (base_dir / filename).resolve()
+        
+        # is_relative_to est une méthode sûre (Python 3.9+) pour vérifier que le chemin cible
+        # est bien un sous-élément du répertoire de base.
+        if target_path.is_relative_to(base_dir) and target_path != base_dir:
+            return True, target_path
+            
         return False, None
     except Exception:
         return False, None

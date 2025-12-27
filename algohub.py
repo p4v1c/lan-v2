@@ -7,7 +7,8 @@ def start(container_name):
     print(f"Starting AlgoHub with container: {container_name}...")
     env = os.environ.copy()
     env["PENTEST_CONTAINER"] = container_name
-    subprocess.run(["docker", "compose", "up", "-d"], env=env, check=True)
+    # Ajout de --build pour forcer la reconstruction de l'image
+    subprocess.run(["docker", "compose", "up", "-d", "--build"], env=env, check=True)
     print("AlgoHub started successfully.")
 
 def stop():
