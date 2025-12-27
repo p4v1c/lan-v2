@@ -126,8 +126,9 @@ class ResultService:
             if not conn: return {}
             try:
                 cur = conn.cursor()
+                # On récupère aussi le contexte pour chercher des IPs alternatives
                 cur.execute("""
-                    SELECT id, module_name, target, to_char(created_at, 'YYYY-MM-DD HH24:MI'), 
+                    SELECT id, module_name, target, context, to_char(created_at, 'YYYY-MM-DD HH24:MI'), 
                         (result_content IS NOT NULL AND length(result_content) > 0) as has_content
                     FROM scan_tasks 
                     WHERE target IS NOT NULL AND (status = 'completed' OR status = 'result')
@@ -137,27 +138,51 @@ class ResultService:
                 conn.close()
 
                 tree = {}
+                # Clés à vérifier dans le contexte pour trouver une IP, par ordre de priorité
+                ip_keys_in_context = ['dc_ip', 'ip', 'host', 'hostname']
+
                 for r in rows:
-                    tid, mod, target, date, has_content = r
-                    target = str(target).strip()
+                    tid, mod, target, context_json, date, has_content = r
                     
-                    grp = "Autres"
-                    try:
-                        if "/" in target:
-                            ipaddress.ip_network(target, strict=False)
-                            grp = target
-                        elif ":" in target: 
-                            grp = "IPv6"
-                        else: 
-                            ip_obj = ipaddress.ip_address(target)
-                            grp = str(ipaddress.ip_network(f"{ip_obj}/24", strict=False))
-                    except: 
-                        grp = "Global / Workflows"
+                    display_target = str(target).strip()
                     
+                    # Logique pour trouver la meilleure IP pour le regroupement
+                    grouping_ip = None
+                    potential_ips = [display_target]
+                    context = json.loads(context_json) if context_json else {}
+                    for key in ip_keys_in_context:
+                        if key in context and context[key]:
+                            potential_ips.append(str(context[key]))
+
+                    for ip_str in potential_ips:
+                        try:
+                            # Test si c'est une IP valide
+                            ipaddress.ip_address(ip_str)
+                            grouping_ip = ip_str # C'est une IP valide, on l'utilise
+                            break
+                        except ValueError:
+                            continue # Ce n'est pas une IP, on essaie la suivante
+
+                    # On détermine le groupe basé sur l'IP trouvée
+                    grp = "Global / Workflows" # Groupe par défaut
+                    if grouping_ip:
+                        try:
+                            if "/" in grouping_ip:
+                                ipaddress.ip_network(grouping_ip, strict=False)
+                                grp = grouping_ip # C'est un CIDR
+                            elif ":" in grouping_ip: 
+                                grp = "IPv6"
+                            else: 
+                                ip_obj = ipaddress.ip_address(grouping_ip)
+                                grp = str(ipaddress.ip_network(f"{ip_obj}/24", strict=False))
+                        except ValueError:
+                            # Si ce n'est pas une IP/CIDR valide, on laisse le groupe par défaut
+                            pass
+
                     if grp not in tree: tree[grp] = {}
-                    if target not in tree[grp]: tree[grp][target] = []
+                    if display_target not in tree[grp]: tree[grp][display_target] = []
                     
-                    tree[grp][target].append({
+                    tree[grp][display_target].append({
                         "id": tid,
                         "module": mod,
                         "date": date,
