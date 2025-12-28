@@ -33,31 +33,30 @@
         </div>
     </nav>
 
-    <div id="ad-full-width-container" style="height: calc(100vh - 70px);">
+    <div id="main-content-area" style="height: calc(100vh - 70px);">
         <div class="card" style="height: 100%; display: flex; flex-direction: row; overflow: hidden; margin-bottom: 0;">
-            
-            <div class="tree-container" style="width: 30%; min-width: 300px; border-right: 1px solid var(--bg-separator); background: var(--bg-card);">
-                <div style="font-weight: 700; margin-bottom: 1rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
-                    <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    Base de Connaissances
-                    <button onclick="refreshResultsTree()" style="margin-left: auto; background: transparent; border: none; cursor: pointer; color: var(--accent-color);">↻</button>
+
+            <!-- Left Panel: Subnet/IP List -->
+            <div class="summary-panel" style="width: 35%; min-width: 350px; border-right: 1px solid var(--bg-separator); background: var(--bg-card); overflow-y: auto;">
+                <div class="panel-header">
+                    <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h8a2 2 0 002-2v-1a2 2 0 012-2h1.945M7.105 11a5.5 5.5 0 009.79 0M12 5.5a2.5 2.5 0 012.5 2.5m-5 0A2.5 2.5 0 0112 5.5m0 0V3m0 2.5a2.5 2.5 0 00-2.5 2.5M7.105 11H5a2 2 0 00-2 2v1a2 2 0 002 2h1.945M16.945 16H19a2 2 0 002-2v-1a2 2 0 00-2-2h-2.055M12 21v-2.5m0 0a2.5 2.5 0 01-2.5-2.5m5 0A2.5 2.5 0 0112 18.5m0 0a2.5 2.5 0 00-2.5-2.5m5 0A2.5 2.5 0 0012 18.5"></path></svg>
+                    <span>Hôtes Scannés</span>
+                    <button id="refresh-summary" class="refresh-btn">↻</button>
                 </div>
-                <div id="results-tree-content">
+                <div id="results-summary-content">
                     <div style="text-align: center; color: var(--text-muted); margin-top: 2rem;">Chargement...</div>
                 </div>
             </div>
 
-            <div style="flex: 1; display: flex; flex-direction: column; background: var(--bg-body);">
-                <div class="log-viewer-header">
-                    <div style="font-weight: 600; color: var(--text-primary);" id="log-viewer-title">Sélectionnez un résultat</div>
-                    <div style="display: flex; gap: 10px;">
-                        <a id="btn-download-log" href="#" class="btn btn-outline" style="display: none; padding: 4px 10px; font-size: 0.8rem;">⬇️ Télécharger .txt</a>
-                    </div>
+            <!-- Right Panel: IP Details -->
+            <div class="detail-panel" style="flex: 1; display: flex; flex-direction: column; background: var(--bg-body); overflow-y: auto;">
+                <div class="panel-header">
+                    <span id="detail-panel-title">Sélectionnez un Hôte</span>
                 </div>
-                <div id="log-viewer-content" class="log-content">
+                <div id="ip-details-content" class="detail-content">
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #64748B;">
-                        <svg style="width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        <span>Cliquez sur un module à gauche pour voir les détails.</span>
+                        <svg style="width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v11.494m-9-5.747h18"></path></svg>
+                        <span>Cliquez sur un hôte à gauche pour voir les détails.</span>
                     </div>
                 </div>
             </div>

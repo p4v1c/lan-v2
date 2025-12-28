@@ -87,5 +87,8 @@ class ScanService:
     def get_results_tree(self):
         return self.result_service.get_results_tree()
 
+    def get_host_centric_summary(self):
+        return self.result_service.get_host_centric_summary()
+
     def get_checklist_data(self):
         return self.checklist_service.get_checklist_data()

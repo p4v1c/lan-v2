@@ -271,6 +271,11 @@ def get_task_output_api(task_id):
 def get_results_tree():
     return jsonify(scan_service.get_results_tree())
 
+@app.route('/api/results/host-summary', methods=['GET'])
+@login_required
+def get_host_centric_summary():
+    return jsonify(scan_service.get_host_centric_summary())
+
 @app.route('/api/results/download/<int:task_id>', methods=['GET'])
 @login_required
 def download_log(task_id):

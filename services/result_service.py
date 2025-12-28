@@ -194,6 +194,96 @@ class ResultService:
                 print(f"Tree Error: {e}")
                 return {}
 
+    def get_host_centric_summary(self):
+        """
+        Fetches and structures all vulnerability and scan data, grouped by subnet and host.
+        This is the primary data source for the redesigned results page.
+        """
+        conn = get_db_connection()
+        if not conn: return {}
+
+        severity_order = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1, "INFO": 0}
+        
+        try:
+            cur = conn.cursor()
+            
+            # 1. Get a complete list of all IPs that have been scanned or have vulns
+            cur.execute("SELECT DISTINCT host_ip FROM vulnerabilities UNION SELECT DISTINCT target FROM scan_tasks WHERE target IS NOT NULL")
+            all_hosts_rows = cur.fetchall()
+            all_host_ips = {row[0] for row in all_hosts_rows if re.match(r"^\d{1,3}(\.\d{1,3}){3}$", row[0])}
+
+            # 2. Fetch all vulnerabilities and tasks
+            cur.execute("SELECT id, host_ip, title, severity, details, module_source, to_char(created_at, 'YYYY-MM-DD HH24:MI') FROM vulnerabilities")
+            vuln_rows = cur.fetchall()
+            
+            cur.execute("SELECT id, target, module_name, to_char(created_at, 'YYYY-MM-DD HH24:MI') FROM scan_tasks WHERE status IN ('completed', 'result')")
+            task_rows = cur.fetchall()
+            
+            conn.close()
+
+            # 3. Initialize data structure for all hosts
+            hosts_data = {}
+            for ip in all_host_ips:
+                hosts_data[ip] = {
+                    "ip": ip,
+                    "vuln_count": 0,
+                    "highest_severity": "INFO",
+                    "severity_counts": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0},
+                    "vulnerabilities": [],
+                    "scans": []
+                }
+
+            # 4. Process and map vulnerabilities
+            for r in vuln_rows:
+                vid, ip, title, severity, details, module, date = r
+                if ip in hosts_data:
+                    host = hosts_data[ip]
+                    severity_norm = severity.upper()
+                    
+                    host["vulnerabilities"].append({
+                        "id": vid, "title": title, "severity": severity_norm, 
+                        "details": details, "module": module, "date": date
+                    })
+                    host["vuln_count"] += 1
+                    
+                    if severity_norm in host["severity_counts"]:
+                        host["severity_counts"][severity_norm] += 1
+                    
+                    if severity_order.get(severity_norm, 0) > severity_order.get(host["highest_severity"], 0):
+                        host["highest_severity"] = severity_norm
+
+            # 5. Process and map scan tasks
+            for tid, target, module, date in task_rows:
+                if target in hosts_data:
+                    hosts_data[target]["scans"].append({"id": tid, "module": module, "date": date})
+
+            # 6. Group hosts by subnet
+            subnets = {}
+            for ip, data in hosts_data.items():
+                try:
+                    ip_obj = ipaddress.ip_address(ip)
+                    network_key = "Autres"
+                    if ip_obj.is_private:
+                        network_key = str(ipaddress.ip_network(f"{ip}/24", strict=False))
+                    elif ip_obj.is_loopback:
+                        network_key = "Loopback"
+                    
+                    if network_key not in subnets:
+                        subnets[network_key] = []
+                    subnets[network_key].append(data)
+                except ValueError:
+                    if "Invalides" not in subnets:
+                        subnets["Invalides"] = []
+                    subnets["Invalides"].append(data)
+            
+            return subnets
+
+        except (Exception, psycopg2.Error) as e:
+            print(f"Error in get_host_centric_summary: {e}")
+            return {}
+        finally:
+            if conn: conn.close()
+
     def _map_badge_to_severity(self, badge):
         badge = str(badge).upper()
         if "CRITIQUE" in badge or "PWNED" in badge or "ADMIN" in badge: return "CRITIQUE"
