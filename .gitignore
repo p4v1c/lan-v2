@@ -1,2 +1,4 @@
 scan_logs/
 .env
+__pycache__/
+*.pyc
