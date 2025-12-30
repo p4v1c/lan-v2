@@ -1,0 +1,37 @@
+id: certifried_detection
+name: Certifried (CVE-2022-26923) Detection
+category: Exploitation
+description: "Tente d'obtenir un certificat machine via Certipy pour détecter Certifried (CVE-2022-26923). La détection est basée sur la réussite de la requête et l'absence d'OID du SID dans le certificat."
+checklist_keys: ["cve_2022_26923"]
+inputs:
+  - name: domain
+    label: "Domaine"
+    placeholder: essos.local
+  - name: username
+    label: "Utilisateur"
+    placeholder: khal.drogo
+  - name: password
+    label: Mot de passe
+    placeholder: horse
+  - name: dc_ip
+    label: IP du DC
+    placeholder: 10.3.10.12
+  - name: target_machine_ip
+    label: IP de la machine cible (à tester)
+    placeholder: 10.3.10.23
+  - name: ca_name
+    label: Nom de l'Autorité de Certification (CA)
+    placeholder: ESSOS-CA
+  - name: template_name
+    label: Nom du template de certificat (doit permettre l'authentification machine)
+    placeholder: Machine
+
+command: "certipy req -u '{{username}}'@{{domain}} -p '{{password}}' -dc-ip '{{dc_ip}}' -target '{{target_machine_ip}}' -ca '{{ca_name}}' -template '{{template_name}}'"
+
+parsing:
+  mode: "text"
+  rules:
+    - name: "Certifried (CVE-2022-26923) - Absence de SID objet dans le certificat"
+      regex: "Certificate has no object SID" 
+      badge: "🔴 [CRITIQUE]"
+

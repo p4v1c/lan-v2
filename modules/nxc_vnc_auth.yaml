@@ -12,8 +12,7 @@ command: "nxc ssh {{target}} -u admin -p admin"
 parsing:
   mode: "line"
   ip_extract: "\\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b"
-  
   rules:
-    - name: "Compte SSH Compromis"
+    - name: "Compte VNC Compromis"
       regex: "\\[\\+\\]"
       badge: "🔴 [CRITIQUE]"

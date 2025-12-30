@@ -137,3 +137,48 @@
 
 /* Icône check dans le carré */
 .status-indicator svg { width: 16px; height: 16px; stroke-width: 3px; }
+
+/* Style pour le checkbox manuel */
+.checklist-item .status-indicator input[type="checkbox"].manual-check-toggle {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    margin: 0; /* Supprime la marge par défaut */
+    appearance: none; /* Cache le style par défaut du navigateur */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border: 2px solid var(--text-muted); /* Bordure pour l'état non coché */
+    border-radius: 4px;
+    outline: none;
+    transition: all 0.2s;
+    background-color: var(--bg-body); /* Fond non coché */
+}
+
+/* État coché */
+.checklist-item .status-indicator input[type="checkbox"].manual-check-toggle:checked {
+    background-color: #10B981; /* Couleur de fond verte */
+    border-color: #10B981; /* Bordure verte */
+}
+
+/* Icône de coche personnalisée (pour l'état coché) */
+.checklist-item .status-indicator input[type="checkbox"].manual-check-toggle:checked::before {
+    content: '✓'; /* Symbole de coche Unicode */
+    display: block;
+    color: white;
+    font-size: 14px;
+    line-height: 18px; /* Centre verticalement */
+    text-align: center;
+}
+
+/* Désactivé (auto-checked) */
+.checklist-item .status-indicator input[type="checkbox"].manual-check-toggle:disabled {
+    cursor: not-allowed;
+    background-color: var(--bg-disabled);
+    border-color: var(--border-disabled);
+    opacity: 0.7;
+}
+
+/* Masquer le SVG original si le checkbox est présent */
+.checklist-item .status-indicator .svg-checkmark {
+    display: none;
+}

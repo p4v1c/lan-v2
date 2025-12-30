@@ -21,6 +21,7 @@ class ResultService:
                 cur.execute("UPDATE scan_tasks SET status=%s WHERE id=%s", (status, task_id))
                 conn.commit()
                 if conn and not conn.closed:
+                    cur.close()
                     conn.close()
 
             if not row or not row[1]: 
@@ -139,7 +140,7 @@ class ResultService:
                 cur.execute("INSERT INTO hosts (ip) VALUES (%s) ON CONFLICT (ip) DO NOTHING", (ip,))
                 
                 if severity != "INFO":
-                    cur.execute("SELECT id FROM vulnerabilities WHERE host_ip=%s AND title=%s AND details=%s", (ip, title, details))
+                    cur.execute("SELECT id FROM vulnerabilities WHERE host_ip=%s AND title=%s", (ip, title))
                     if not cur.fetchone():
                         cur.execute("""
                             INSERT INTO vulnerabilities (host_ip, module_source, title, severity, details)

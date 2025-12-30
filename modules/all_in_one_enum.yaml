@@ -1,0 +1,81 @@
+id: all_in_one_enum
+name: All-in-One Enumeration
+category: Enumeration
+description: "Combine several enumeration and no-auth scans."
+inputs:
+  - name: target
+    label: Cible (IP/CIDR)
+    placeholder: 10.3.10.0/24
+  - name: username
+    label: Utilisateur (facultatif)
+    placeholder: guest
+    default: ""
+  - name: password
+    label: Mot de passe (facultatif)
+    placeholder: password
+    default: ""
+  - name: dc_ip
+    label: IP du DC (pour LDAP, facultatif)
+    placeholder: 10.3.10.11
+    default: ""
+
+steps:  
+  - name: SMB Security (v1 & Signing)
+    command: "nxc smb {{target}} -u '{{username}}' -p '{{password}}'"
+
+  - name: Anonymous SMB Shares
+    command: "nxc smb {{target}} -u '' -p '' --shares" 
+
+  - name: SSH Default Creds
+    command: "nxc ssh {{target}} -u root admin user -p root admin password user 123456"
+
+  - name: FTP Anonymous
+    command: "nxc ftp {{target}} -u 'anonymous' -p 'anonymous'"
+
+  - name: LDAP Anonymous Bind
+    command: "nxc ldap {{target}} -u '' -p ''"
+
+  - name: LDAP Security
+    command: "nxc ldap {{target}} -u '{{username}}' -p '{{password}}'"
+
+parsing:
+  mode: "text" 
+  ip_extract: "\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
+  rules:
+    # From SMB Security (nxc_smb_security.yaml)
+    - name: "SMB Signing Désactivé (Relay Possible !)"
+      regex: "signing:False"
+      badge: "🔴 [DANGER]"
+    - name: "SMBv1 Activé (EternalBlue ?)"
+      regex: "SMBv1:True"
+      badge: "🔴 [CRITIQUE]"
+
+    # From Anonymous SMB Shares (netexec-share.yaml)
+    - name: "Partage Writable (R/W)"
+      regex: "READ,WRITE"
+      badge: "🔴 [DANGER]"
+
+    - name: "Null Session Activée"
+      regex: "Null Auth:True"
+      badge: "🟠 [RISQUE]"
+
+    # From SSH Default Creds (nxcc_ssh_default.yaml)
+    - name: "Compte SSH Compromis"
+      regex: '\[\+\]'
+      badge: "🔴 [CRITIQUE]"
+
+    # From FTP Anonymous (ftp_anonyme.yaml)
+    - name: "FTP Anonyme Activé"
+      regex: '\[\+\]'
+      badge: "🟠 [MOYEN]"
+
+    - name: "LDAP Null Bind (Anonyme)"
+      regex: '\[\+\]'
+      badge: "🟠 [MOYEN]"
+
+    - name: "LDAP Signing NON Forcé (Relay Possible)"
+      regex: "signing:(False|None)"
+      badge: "🔴 [CRITIQUE]"
+    - name: "Channel Binding Désactivé"
+      regex: "channel binding:Never"
+      badge: "🟠 [RISQUE]"

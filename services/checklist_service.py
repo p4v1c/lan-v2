@@ -42,3 +42,23 @@ class ChecklistService:
             print(f"Checklist Error: {e}")
             if conn: conn.close()
             return {}
+
+    def toggle_checklist_item(self, checklist_key, target, is_checked):
+        conn = get_db_connection()
+        if not conn: return False
+        try:
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO checklist_status (target, checklist_key, is_checked, updated_at)
+                VALUES (%s, %s, %s, NOW())
+                ON CONFLICT (target, checklist_key) DO UPDATE SET is_checked = EXCLUDED.is_checked, updated_at = NOW()
+            """, (target, checklist_key, is_checked))
+            conn.commit()
+            cur.close()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"Error toggling checklist item: {e}")
+            if conn: conn.close()
+            return False
+

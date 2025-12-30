@@ -247,6 +247,27 @@ def get_checklist_api():
     # Renvoie le JSON des données
     return jsonify(scan_service.get_checklist_data())
 
+@app.route('/api/checklist/toggle', methods=['POST'])
+@login_required
+def toggle_checklist_api():
+    data = request.json
+    checklist_key = data.get('key')
+    target = data.get('target')
+    is_checked = data.get('is_checked')
+
+    if not checklist_key or not target:
+        return jsonify({'error': 'Missing key or target'}), 400
+    
+    # Ensure is_checked is a boolean
+    if not isinstance(is_checked, bool):
+        return jsonify({'error': 'is_checked must be a boolean'}), 400
+
+    success = scan_service.checklist_service.toggle_checklist_item(checklist_key, target, is_checked)
+    if success:
+        return jsonify({'status': 'ok'})
+    else:
+        return jsonify({'error': 'Failed to toggle checklist item'}), 500
+
 @app.route('/api/tasks/<int:task_id>/stop', methods=['POST'])
 @login_required
 def stop_task_api(task_id):

@@ -23,15 +23,7 @@ parsing:
     - name: "SMB Signing Désactivé (Relay Possible !)"
       regex: "signing:False"
       badge: "🔴 [DANGER]"
-    
-    - name: "SMB Signing Activé (Safe)"
-      regex: "signing:True"
-      badge: "✅ [OK]"
 
     - name: "SMBv1 Activé (EternalBlue ?)"
       regex: "SMBv1:True"
       badge: "🔴 [CRITIQUE]"
-      
-    - name: "SMBv1 Désactivé"
-      regex: "SMBv1:False"
-      badge: "✅ [OK]"
