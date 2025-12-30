@@ -13,7 +13,7 @@ inputs:
     placeholder: /workspace/screenshots
     default: /workspace/screenshots
 # On ajoute --db-uri pour que ça alimente la base utilisée par le serveur GoWitness
-command: "gowitness scan nmap -f {{xml_path}} -s {{output_path}} --write-db --open-only --db-uri sqlite:///workspace/gowitness.sqlite3"
+command: "gowitness scan nmap -f {{xml_path}} -s {{output_path}} --write-db --open-only --write-db-uri sqlite:///workspace/gowitness.sqlite3 -T 30 -t 20 " 
 
 parsing:
   mode: "line"

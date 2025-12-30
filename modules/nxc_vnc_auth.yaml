@@ -1,13 +1,13 @@
-id: nxc_ssh_default
-name: SSH Default Creds
+id: nxc_vnc_default
+name: vnc Default Creds
 category: "2. Accès Anonymes"
-description: "Test de logins par défaut sur SSH."
-checklist_keys: ["anon_ssh"]
+description: "Test de logins par défaut sur vnc."
+checklist_keys: ["anon_nvc"]
 inputs:
   - name: target
     label: Cible (IP/CIDR)
     placeholder: 10.3.10.0/24
-command: "nxc ssh {{target}} -u root admin user -p root admin password user 123456"
+command: "nxc ssh {{target}} -u admin -p admin"
 
 parsing:
   mode: "line"
