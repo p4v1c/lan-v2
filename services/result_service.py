@@ -14,15 +14,14 @@ class ResultService:
         cur = conn.cursor()
         
         try:
-            # 1. Récupération des données brutes
             cur.execute("SELECT module_id, result_content, module_name, target FROM scan_tasks WHERE id = %s", (task_id,))
             row = cur.fetchone()
             
-            # Fonction utilitaire pour fermer proprement avec un statut donné
             def close_with_status(status):
                 cur.execute("UPDATE scan_tasks SET status=%s WHERE id=%s", (status, task_id))
                 conn.commit()
-                conn.close()
+                if conn and not conn.closed:
+                    conn.close()
 
             if not row or not row[1]: 
                 close_with_status('completed')
@@ -36,9 +35,7 @@ class ResultService:
                 return
 
             parsing = module_config.get('parsing', {})
-            
             if parsing.get('save_results') is False:
-                print(f"⏩ Tâche {task_id} ignorée des résultats (save_results: false).")
                 close_with_status('hidden')
                 return
 
@@ -46,34 +43,61 @@ class ResultService:
             ip_extract = parsing.get('ip_extract') or r"\b((?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
 
             findings = []
+            discovered_hosts = set()
+
+            def is_valid_ip(s):
+                if not s or not isinstance(s, str): return False
+                try:
+                    ipaddress.ip_address(s)
+                    return True
+                except ValueError:
+                    return False
+
+            db_target_is_ip = is_valid_ip(db_target)
 
             if mode == 'text':
                 rules = parsing.get('rules', [])
                 for line in log_content.splitlines():
                     if "---" in line or not line.strip(): continue
-                    current_ip = db_target
+                    
+                    line_ip = None
                     m_ip = re.search(ip_extract, line)
-                    if m_ip: current_ip = m_ip.group(0)
+                    if m_ip:
+                        ip_candidate = m_ip.group(0)
+                        if is_valid_ip(ip_candidate):
+                            line_ip = ip_candidate
+                            discovered_hosts.add(line_ip)
+
+                    finding_ip = line_ip or (db_target if db_target_is_ip else None)
+                    if not finding_ip: continue
 
                     for rule in rules:
                         if re.search(rule.get('regex'), line):
                             severity = self._map_badge_to_severity(rule.get('badge', 'INFO'))
                             title = rule.get('name', 'Détection')
                             details = line.strip()[:250]
-                            findings.append((current_ip, severity, title, details))
+                            findings.append((finding_ip, severity, title, details))
 
             elif mode == 'block':
                 sep = parsing.get('block_separator', '').replace('regex:', '')
                 blocks = re.split(f"(?={sep})", log_content, flags=re.MULTILINE) if sep else [log_content]
                 for b in blocks:
-                    current_ip = db_target
+                    line_ip = None
                     m_ip = re.search(ip_extract, b)
-                    if m_ip: current_ip = m_ip.group(0)
+                    if m_ip:
+                        ip_candidate = m_ip.group(0)
+                        if is_valid_ip(ip_candidate):
+                            line_ip = ip_candidate
+                            discovered_hosts.add(line_ip)
+
+                    finding_ip = line_ip or (db_target if db_target_is_ip else None)
+                    if not finding_ip: continue
+
                     if "open" in b: 
                         ports = re.findall(r"(\d+/tcp)\s+open\s+([\w-]+)", b)
                         if ports:
                             details = ", ".join([f"{p[0]}:{p[1]}" for p in ports])
-                            findings.append((current_ip, "INFO", "Ports Ouverts", details))
+                            findings.append((finding_ip, "INFO", "Ports Ouverts", details))
 
             elif mode == 'json':
                 try:
@@ -83,7 +107,18 @@ class ResultService:
                         data = json.loads(log_content[start:])
                         if isinstance(data, dict): data = [data]
                         for entry in data:
-                            current_ip = db_target
+                            entry_ip = None
+                            for _, value in entry.items():
+                                if isinstance(value, str):
+                                    m_ip = re.search(ip_extract, value)
+                                    if m_ip and is_valid_ip(m_ip.group(0)):
+                                        entry_ip = m_ip.group(0)
+                                        discovered_hosts.add(entry_ip)
+                                        break
+                            
+                            finding_ip = entry_ip or (db_target if db_target_is_ip else None)
+                            if not finding_ip: continue
+
                             for r in parsing.get('rules', []):
                                 val = entry.get(r.get('condition_key'))
                                 match = False
@@ -92,14 +127,15 @@ class ResultService:
                                 if match:
                                     sev = self._map_badge_to_severity(r.get('badge', 'INFO'))
                                     title = r.get('name', 'Vulnérabilité')
-                                    findings.append((current_ip, sev, title, f"Via {r.get('condition_key')}"))
-                except: pass
+                                    findings.append((finding_ip, sev, title, f"Via {r.get('condition_key')}"))
+                except Exception as e:
+                    print(f"Error parsing JSON: {e}")
+
+            for ip in discovered_hosts:
+                cur.execute("INSERT INTO hosts (ip) VALUES (%s) ON CONFLICT (ip) DO NOTHING", (ip,))
 
             unique_findings = list(set(findings))
-
             for ip, severity, title, details in unique_findings:
-                if "/" in ip or not ip: continue
-                
                 cur.execute("INSERT INTO hosts (ip) VALUES (%s) ON CONFLICT (ip) DO NOTHING", (ip,))
                 
                 if severity != "INFO":
@@ -110,16 +146,15 @@ class ResultService:
                             VALUES (%s, %s, %s, %s, %s)
                         """, (ip, module_name, title, severity, details))
 
-            close_with_status('completed')
-            print(f"✅ Parsing terminé pour task {task_id} : {len(unique_findings)} résultats.")
+            conn.commit()
+            print(f"✅ Parsing terminé pour task {task_id} : {len(discovered_hosts)} hôtes découverts, {len(unique_findings)} résultats.")
 
-        except Exception as e:
+        except (Exception, psycopg2.Error) as e:
             print(f"❌ Erreur Parsing: {e}")
             if conn: conn.rollback()
         finally:
             if conn and not conn.closed:
-                cur.close()
-                conn.close()
+                close_with_status('completed')
 
     def get_results_tree(self):
             conn = get_db_connection()
@@ -207,10 +242,18 @@ class ResultService:
         try:
             cur = conn.cursor()
             
-            # 1. Get a complete list of all IPs that have been scanned or have vulns
-            cur.execute("SELECT DISTINCT host_ip FROM vulnerabilities UNION SELECT DISTINCT target FROM scan_tasks WHERE target IS NOT NULL")
+            # 1. Get all hosts from the dedicated 'hosts' table.
+            cur.execute("SELECT ip FROM hosts")
             all_hosts_rows = cur.fetchall()
-            all_host_ips = {row[0] for row in all_hosts_rows if re.match(r"^\d{1,3}(\.\d{1,3}){3}$", row[0])}
+            
+            # Filter for valid IPs to avoid processing errors
+            all_host_ips = set()
+            for row in all_hosts_rows:
+                try:
+                    ipaddress.ip_address(row[0])
+                    all_host_ips.add(row[0])
+                except ValueError:
+                    pass # Ignore entries that are not valid IP addresses
 
             # 2. Fetch all vulnerabilities and tasks
             cur.execute("SELECT id, host_ip, title, severity, details, module_source, to_char(created_at, 'YYYY-MM-DD HH24:MI') FROM vulnerabilities")
@@ -221,17 +264,12 @@ class ResultService:
             
             conn.close()
 
-            # 3. Initialize data structure for all hosts
-            hosts_data = {}
-            for ip in all_host_ips:
-                hosts_data[ip] = {
-                    "ip": ip,
-                    "vuln_count": 0,
-                    "highest_severity": "INFO",
-                    "severity_counts": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0},
-                    "vulnerabilities": [],
-                    "scans": []
-                }
+            # 3. Initialize data structure for all valid hosts
+            hosts_data = {ip: {
+                "ip": ip, "vuln_count": 0, "highest_severity": "INFO",
+                "severity_counts": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0},
+                "vulnerabilities": [], "scans": []
+            } for ip in all_host_ips}
 
             # 4. Process and map vulnerabilities
             for r in vuln_rows:
@@ -252,10 +290,37 @@ class ResultService:
                     if severity_order.get(severity_norm, 0) > severity_order.get(host["highest_severity"], 0):
                         host["highest_severity"] = severity_norm
 
-            # 5. Process and map scan tasks
+            # 5. Associate scans with hosts (The Fix)
+            # Pre-process tasks into a more usable format
+            networks_to_scan = []
+            other_targets_to_scan = {}
             for tid, target, module, date in task_rows:
-                if target in hosts_data:
-                    hosts_data[target]["scans"].append({"id": tid, "module": module, "date": date})
+                if not target: continue
+                scan_info = {"id": tid, "module": module, "date": date}
+                if '/' in target:
+                    try:
+                        networks_to_scan.append((ipaddress.ip_network(target, strict=False), scan_info))
+                    except ValueError: # Not a valid network, treat as a literal target
+                        if target not in other_targets_to_scan: other_targets_to_scan[target] = []
+                        other_targets_to_scan[target].append(scan_info)
+                else:
+                    if target not in other_targets_to_scan: other_targets_to_scan[target] = []
+                    other_targets_to_scan[target].append(scan_info)
+
+            # Iterate through hosts and check for matching scans
+            for ip_str, host_data in hosts_data.items():
+                # Check against literal targets
+                if ip_str in other_targets_to_scan:
+                    host_data["scans"].extend(other_targets_to_scan[ip_str])
+                
+                # Check against network targets
+                try:
+                    ip_addr = ipaddress.ip_address(ip_str)
+                    for network, scan_info in networks_to_scan:
+                        if ip_addr in network:
+                            host_data["scans"].append(scan_info)
+                except ValueError:
+                    continue
 
             # 6. Group hosts by subnet
             subnets = {}
@@ -282,7 +347,7 @@ class ResultService:
             print(f"Error in get_host_centric_summary: {e}")
             return {}
         finally:
-            if conn: conn.close()
+            if conn and not conn.closed: conn.close()
 
     def _map_badge_to_severity(self, badge):
         badge = str(badge).upper()

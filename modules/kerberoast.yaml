@@ -19,6 +19,8 @@ inputs:
 command: "GetUserSPNs.py {{domain}}/{{username}}:'{{password}}' -dc-ip {{dc_ip}} -request -outputfile /workspace/kerberoast_hashes.txt"
 
 parsing:
-  mode: "line"
-  save_results: false # <--- Empêche l'affichage dans l'onglet Résultats
-  ip_extract: ".*"
+  mode: "text"
+  rules:
+    - name: "Utilisateur Kerberoastable"
+      regex: "\\$krb5tgs\\$"
+      badge: "🟠 [ELEVÉ]"

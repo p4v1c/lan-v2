@@ -19,6 +19,8 @@ inputs:
 command: "GetNPUsers.py {{domain}}/{{username}}:'{{password}}' -dc-ip {{dc_ip}} -request -format hashcat -outputfile /workspace/asreproast_hashes.txt"
 
 parsing:
-  mode: "line"
-  save_results: false 
-  ip_extract: ".*"
+  mode: "text"
+  rules:
+    - name: "Utilisateur AS-REPRoastable"
+      regex: "\\$krb5asrep\\$"
+      badge: "🔴 [CRITIQUE]"

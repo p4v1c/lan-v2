@@ -50,7 +50,7 @@ class TaskService:
         module = self.module_service.get_module(module_id)
         if not module: return {"error": "Module introuvable"}
 
-        target = inputs.get("target") or inputs.get("ip") or inputs.get("range") or "Workflow"
+        target = inputs.get("target") or inputs.get("ip") or inputs.get("range") or inputs.get("host") or inputs.get("dc_ip") or "Workflow"
         first_cmd = module.get("command", "Multi-step Workflow...")
         if "command" in module:
             for k, v in inputs.items():

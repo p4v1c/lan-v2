@@ -80,33 +80,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Sauvegarder
     btnSave.onclick = async () => {
-        const name = filenameInput.value.trim();
+        const newName = filenameInput.value.trim();
+        const oldName = currentFile;
         const content = editorTextarea.value;
 
-        if (!name) { alert("Veuillez donner un nom au fichier."); return; }
+        if (!newName) {
+            alert("Veuillez donner un nom au fichier.");
+            return;
+        }
 
         try {
             statusEl.textContent = "Sauvegarde en cours...";
             const res = await fetch('/api/editor/save', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ filename: name, content: content })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: newName, content: content })
             });
 
-            const data = await res.json();
             if (res.ok) {
+                const data = await res.json();
+                
+                if (oldName && newName !== oldName) {
+                    try {
+                        const deleteRes = await fetch(`/api/editor/delete?file=${encodeURIComponent(oldName)}`, { method: 'DELETE' });
+                        if (!deleteRes.ok) {
+                           console.error("La suppression de l'ancien fichier a échoué.");
+                        }
+                    } catch (e) {
+                        console.error("Erreur lors de la suppression de l'ancien fichier:", e);
+                    }
+                }
+
                 statusEl.textContent = "Sauvegardé avec succès !";
-                currentFile = data.filename; // Au cas où l'extension .yaml a été ajoutée
+                currentFile = data.filename;
                 filenameInput.value = currentFile;
                 btnDelete.style.display = 'inline-block';
-                loadFiles(); // Rafraichir la liste
+                await loadFiles();
                 
                 setTimeout(() => { statusEl.textContent = "Prêt."; }, 2000);
+
             } else {
-                alert("Erreur: " + data.error);
+                let errorMsg = `Erreur HTTP ${res.status}`;
+                try {
+                    const errorData = await res.json();
+                    errorMsg = errorData.error || JSON.stringify(errorData);
+                } catch (e) {
+                    // Le corps de la réponse n'était pas du JSON, on utilise le texte brut.
+                    const textError = await res.text();
+                    if(textError) errorMsg = textError;
+                }
+                alert("Erreur: " + errorMsg);
                 statusEl.textContent = "Erreur sauvegarde.";
             }
-        } catch (e) { alert("Erreur réseau"); }
+        } catch (e) {
+            console.error("Erreur réseau inattendue:", e);
+            alert("Erreur réseau: " + e.message);
+        }
     };
 
     // 5. Supprimer

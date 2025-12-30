@@ -92,9 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const leftContent = document.createElement('div');
                 leftContent.className = 'ip-item-left';
                 leftContent.innerHTML = `<span>${escapeHtml(ipData.ip)}</span>`;
-                if(ipData.vuln_count > 0) {
-                    leftContent.prepend(createSeverityDots(ipData.highest_severity, ipData.severity_counts));
-                }
 
                 const vulnCountSpan = document.createElement('span');
                 vulnCountSpan.className = 'vuln-count';
@@ -179,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span>Modules Exécutés (${ipData.scans.length})</span>
         </div>`;
         const scanListContainer = document.createElement('div');
-        scanListContainer.className = 'scan-list';
+        scanListContainer.className = 'vulnerability-list'; // Reuse vuln list style
         
         if (ipData.scans.length === 0) {
             scanListContainer.innerHTML = `<div class="no-results-message">Aucun module n'a été exécuté sur cet hôte.</div>`;
@@ -187,10 +184,45 @@ document.addEventListener('DOMContentLoaded', () => {
             ipData.scans.sort((a, b) => new Date(b.date) - new Date(a.date))
             .forEach(scan => {
                 const scanEntry = document.createElement('div');
-                scanEntry.className = 'scan-entry';
-                scanEntry.innerHTML = `<span class="scan-module">${escapeHtml(scan.module)}</span>
-                                     <span class="scan-date">${escapeHtml(scan.date)}</span>`;
+                scanEntry.className = 'vulnerability-entry'; // Reuse vuln entry style
+
+                const summary = document.createElement('div');
+                summary.className = 'vuln-summary'; // Reuse vuln summary style
+                summary.innerHTML = `
+                    <span class="vuln-title">${escapeHtml(scan.module)}</span>
+                    <div>
+                        <span class="scan-date">${escapeHtml(scan.date)}</span>
+                        <button class="vuln-details-toggle"></button>
+                    </div>`;
+
+                const details = document.createElement('div');
+                details.className = 'vuln-full-details';
+                details.innerHTML = `<pre>Chargement du résultat...</pre>`;
+                
+                scanEntry.appendChild(summary);
+                scanEntry.appendChild(details);
                 scanListContainer.appendChild(scanEntry);
+
+                summary.querySelector('.vuln-details-toggle').addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const btn = e.target;
+                    const detailsDiv = btn.closest('.vulnerability-entry').querySelector('.vuln-full-details');
+                    const isVisible = detailsDiv.style.display === 'block';
+                    
+                    if (!isVisible && !detailsDiv.dataset.loaded) {
+                        try {
+                            const res = await fetch(`/api/tasks/${scan.id}/output`);
+                            const data = await res.json();
+                            detailsDiv.innerHTML = `<pre>${escapeHtml(data.output || 'Aucun résultat pour ce module.')}</pre>`;
+                            detailsDiv.dataset.loaded = 'true';
+                        } catch (err) {
+                            detailsDiv.innerHTML = `<pre>Erreur: ${err.message}</pre>`;
+                        }
+                    }
+                    
+                    detailsDiv.style.display = isVisible ? 'none' : 'block';
+                    btn.textContent = isVisible ? '' : '';
+                });
             });
         }
         scansSection.appendChild(scanListContainer);
