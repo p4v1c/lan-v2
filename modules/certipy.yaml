@@ -1,8 +1,8 @@
 id: certipy_find
 name: "ADCS Vuln"
-category: Active Directory
+category: Enumération
 description: ""
-checklist_keys: ["adcs_enum"]   # <--- AJOUTER ICI
+checklist_keys: ["adcs_enum"]
 inputs:
   - name: domain
     label: "Domaine"
@@ -20,28 +20,8 @@ command: "certipy find -u '{{username}}'@{{domain}} -p '{{password}}' -dc-ip {{d
 
 parsing:
   mode: "text"
-  # Le parser rangera tout sous l'IP cible (DC)
   
   rules:
-    # --- INFO CA (Ce que tu as demandé) ---
-    - name: "Autorité de Certification (CA)"
-      regex: "CA Name"
-      badge: "🆔 [CA]"
-
-    - name: "Serveur Hébergeant le CA"
-      regex: "DNS Name"
-      badge: "🌐 [SERVER]"
-
-    - name: "Web Enrollment (Vecteur ESC8)"
-      regex: "Web Enrollment\\s*:\\s*Enabled"
-      badge: "🔌 [WEB ENROLL]"
-
-    # --- INFO TEMPLATES ---
-    - name: "Template Vulnérable Trouvé"
-      regex: "Template Name"
-      badge: "📄 [TEMPLATE]"
-
-    # --- VULNERABILITÉS (Détails) ---
     - name: "ESC1 : Escalade (Enrollee Supplies Subject)"
       regex: "ESC1"
       badge: "🔴 [CRITIQUE]"

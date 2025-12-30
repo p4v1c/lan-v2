@@ -15,24 +15,4 @@ inputs:
   - name: password
     label: Mot de passe
     placeholder: password
-command: "ldeep ldap -s ldap://{{dc_ip}} -d {{domain}} -u '{{username}}' -p '{{password}}' pkis -v"
-
-parsing:
-  mode: "json"
-  save_results: true
-  key_ip: "name" 
-  
-  rules:
-    - condition_key: "objectClass"
-      condition_value: "pKIEnrollmentService"
-      badge: "🛡️ [PKI SERVER]"
-
-    - condition_key: "objectClass"
-      condition_value: "pKICertificateTemplate"
-      badge: "📄 [TEMPLATE]"
-
-  fields:
-    - "dNSHostName"          
-    - "cACertificateDN"      
-    - "certificateTemplates" 
-    - "whenCreated"          
+command: "ldeep ldap -s ldap://{{dc_ip}} -d {{domain}} -u '{{username}}' -p '{{password}}' pkis "

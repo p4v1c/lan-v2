@@ -34,11 +34,3 @@ steps:
 parsing:
   mode: "text"
   save_results: false 
-  rules:
-    - name: "Injection DNS OK"
-      regex: "successfully"
-      badge: "✅ [DNS]"
-
-    - name: "PetitPotam Envoyé"
-      regex: "Attack.*Succeeded"
-      badge: "🚀 [SENT]"

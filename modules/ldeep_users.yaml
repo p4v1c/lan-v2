@@ -1,7 +1,7 @@
 id: ldeep_users_wordlist
 name: LDEEP Users Wordlist
 category: Enumération
-checklist_keys: ["ad_users"]    # <--- AJOUTER ICI
+checklist_keys: ["ad_users"]
 description: ""
 inputs:
   - name: domain

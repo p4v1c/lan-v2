@@ -2,7 +2,7 @@ id: nxc_smb_security
 name: SMB Security (v1 & Signing)
 category: Enumération
 description: "Vérifie SMBv1 (Dangereux) et SMB Signing (Relay)."
-checklist_keys: ["sec_smb"]     # <--- AJOUTER ICI
+checklist_keys: ["sec_smb"]
 inputs:
   - name: target
     label: Cible (IP/CIDR)

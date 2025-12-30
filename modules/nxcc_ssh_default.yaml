@@ -1,6 +1,6 @@
 id: nxc_ssh_default
 name: SSH Default Creds
-category: "2. Accès Anonymes"
+category: "Enumération"
 description: "Test de logins par défaut sur SSH."
 checklist_keys: ["anon_ssh"]
 inputs:
@@ -17,3 +17,4 @@ parsing:
     - name: "Compte SSH Compromis"
       regex: "\\[\\+\\]"
       badge: "🔴 [CRITIQUE]"
+

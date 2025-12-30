@@ -1,7 +1,7 @@
 id: Enum Computers
 name: Enum Computers
 category: Enumération
-checklist_keys: ["ad_computers"] # <--- AJOUTER ICI
+checklist_keys: ["ad_computers"]
 description: ""
 inputs:
   - name: domain
@@ -17,11 +17,3 @@ inputs:
     label: Mot de passe
     placeholder: password
 command: "ldeep ldap -s ldap://{{dc_ip}} -d {{domain}} -u '{{username}}' -p '{{password}}' computers --resolve"
-
-parsing:
-  mode: "text"
-  
-  rules:
-    - name: "Ordinateur Détecté"
-      regex: "^\\d{1,3}(?:\\.\\d{1,3}){3}\\s+.*"
-      badge: "💻 [HOST]"

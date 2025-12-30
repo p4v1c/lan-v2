@@ -1,6 +1,6 @@
 id: nxc_bloodhound
 name: NetExec BloodHound
-category: Backup
+category: Others
 description: ""
 inputs:
   - name: target

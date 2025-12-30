@@ -16,37 +16,3 @@ inputs:
     label: Mot de passe
     placeholder: password
 command: "ldeep ldap -s ldap://{{dc_ip}} -d {{domain}} -u '{{username}}' -p '{{password}}' domain_policy"
-
-parsing:
-  mode: "text" 
-  
-  rules:
-    
-    - name: "MAQ Vulnérable (Par défaut)"
-      regex: "ms-DS-MachineAccountQuota:\\s*10"
-      badge: "⚠️ [MAQ=10]"
-
-    - name: "Pas de Verrouillage Compte"
-      regex: "lockoutThreshold:\\s*0"
-      badge: "🔴 [NO LOCKOUT]"
-
-
-    - name: "Niveau Fonctionnel"
-      regex: "msDS-Behavior-Version: .+"
-      badge: "ℹ️ [VERSION]"
-
-    - name: "Politique Mot de Passe"
-      regex: "minPwdLength: .+"
-      badge: "🔑 [PWD MIN]"
-
-    - name: "Historique Mots de Passe"
-      regex: "pwdHistoryLength: .+"
-      badge: "Hz [HISTORY]"
-
-    - name: "Seuil de Blocage"
-      regex: "lockoutThreshold: [1-9].*"
-      badge: "🔒 [LOCKOUT]"
-
-    - name: "Durée Blocage"
-      regex: "lockoutDuration: .+"
-      badge: "⏱️ [TIME]"

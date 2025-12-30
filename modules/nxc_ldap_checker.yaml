@@ -2,7 +2,7 @@ id: nxc_ldap_checker
 name: NetExec LDAP Security
 category: Enumération
 description: "Vérifie la sécurité LDAP (Signing & Channel Binding) via le banner standard."
-checklist_keys: ["sec_ldap"]    # <--- AJOUTER ICI
+checklist_keys: ["sec_ldap"]
 inputs:
   - name: target
     label: IP du DC

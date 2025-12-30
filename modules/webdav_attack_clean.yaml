@@ -28,7 +28,3 @@ command: "dnstool.py -u '{{domain}}\\{{username}}' -p '{{password}}' -r '{{fake_
 parsing:
   mode: "text"
   save_results: false
-  rules:
-    - name: "Suppression OK"
-      regex: "successfully"
-      badge: "🧹 [CLEANED]"

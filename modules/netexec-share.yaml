@@ -17,17 +17,13 @@ command: "nxc smb {{target}} -u '{{username}}' -p '{{password}}' --shares"
 
 parsing:
   mode: "text"
-  # On extrait l'IP présente au début de chaque ligne NetExec
   ip_extract: "\\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b"
   
   rules:
-    # 1. Partage en Lecture ET Écriture (Dangereux)
     - name: "Partage Writable (R/W)"
       regex: "READ,WRITE"
       badge: "🔴 [DANGER]"
 
-    # 2. Partage en Lecture Seule (Infos)
-    # Regex: Cherche "READ" mais QUI N'EST PAS suivi de ",WRITE" (Negative Lookahead)
     - name: "Partage Readable"
       regex: "\\sREAD(?!,WRITE)"
       badge: "🔵 [INFO]"

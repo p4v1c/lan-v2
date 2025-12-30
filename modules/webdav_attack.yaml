@@ -40,16 +40,4 @@ steps:
 
 parsing:
   mode: "text"
-  save_results: false 
-  rules:
-    - name: "Injection DNS OK"
-      regex: "successfully"
-      badge: "✅ [DNS]"
-
-    - name: "PetitPotam Envoyé"
-      regex: "Attack.*Succeeded"
-      badge: "🚀 [SENT]"
-
-    - name: "WebClient Désactivé (Erreur 0x7)"
-      regex: "0x00000007"
-      badge: "❌ [NO WEBCLIENT]"
+  save_results: false

@@ -1,6 +1,6 @@
 id: nxc_ftp_anon
 name: FTP Anonymous
-category: "2. Accès Anonymes"
+category: Enumération
 description: "Test du compte 'anonymous' sur FTP."
 checklist_keys: ["anon_ftp"]
 inputs:
@@ -17,7 +17,3 @@ parsing:
     - name: "FTP Anonyme Activé"
       regex: "\\[\\+\\]"
       badge: "🟠 [MOYEN]"
-    
-    - name: "Échec Login"
-      regex: "STATUS_LOGIN_FAILURE"
-      badge: "✅ [SECURE]"
