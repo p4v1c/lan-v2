@@ -1,6 +1,6 @@
 id: clean_webdav_coercion
 name: Cleanup WebDAV DNS
-category: Exploitation
+category: auto
 description: "Supprime l'enregistrement DNS temporaire utilisé pour le WebDAV."
 inputs:
   - name: dc_ip

@@ -1,6 +1,6 @@
 id: Enum Computers
 name: Enum Computers
-category: Enumération
+category: ldeep
 checklist_keys: ["ad_computers"]
 description: ""
 inputs:

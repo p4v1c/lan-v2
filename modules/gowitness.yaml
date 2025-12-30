@@ -1,7 +1,7 @@
 id: gowitness_nmap
 name: GoWitness (Nmap Scan)
 checklist_keys: ["gowitness"]
-category: Enumération
+category: Others
 description: ""
 inputs:
   - name: xml_path

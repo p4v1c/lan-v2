@@ -1,6 +1,6 @@
 id: manspider_scan
 name: Manspider (File Search)
-category: "Exploitation"
+category: "Others"
 description: "Recherche de mots de passe dans les fichiers partagés."
 checklist_keys: ["manspider"]
 inputs:

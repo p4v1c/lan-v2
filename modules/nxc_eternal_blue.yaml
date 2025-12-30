@@ -1,8 +1,8 @@
 id: nxc_ms17_010
 name: NetExec MS17-010 (EternalBlue)
-category: Exploitation
+category: nxc
 description: "Détecte la faille critique MS17-010 (EternalBlue)."
-checklist_keys: ["cve_ms17_010"] # <--- AJOUTER ICI
+checklist_keys: ["cve_ms17_010"] 
 inputs:
   - name: target
     label: Cible (IP/CIDR)

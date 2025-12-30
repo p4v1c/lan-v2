@@ -1,6 +1,6 @@
 id: nxc_gpp_autologin
 name: NetExec GPP Autologin
-category: Exploitation
+category: nxc
 description: "Cherche les mots de passe d'autologin dans le registre via les GPO (GPP)."
 checklist_keys: ["gpp_autologin"]    # <--- AJOUTER ICI
 inputs:

@@ -1,6 +1,6 @@
 id: ntlm_reflection
 name: ⛓️ Auto NTLM Reflection (Native)
-category: Exploitation
+category: auto
 description: "Exploitation CVE-2025 "
 inputs:
   - name: dc_ip

@@ -1,6 +1,6 @@
 id: nmap_fast
 name: Nmap Fast Scan
-category: Enumération
+category: Others
 checklist_keys: ["enum_ports"]
 description: "Scan rapide des ports communs (Génère XML pour GoWitness)."
 inputs:

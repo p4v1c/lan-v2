@@ -1,6 +1,6 @@
 id: nxc_ssh_default
 name: SSH Default Creds
-category: "Enumération"
+category: "nxc"
 description: "Test de logins par défaut sur SSH."
 checklist_keys: ["anon_ssh"]
 inputs:

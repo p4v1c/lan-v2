@@ -1,7 +1,7 @@
 id: impacket_asreproast
 name: AS-REPRoasting
-category: Exploitation
-checklist_keys: ["asreproast"]  # <--- AJOUTER ICI
+category: Impacket
+checklist_keys: ["asreproast"]
 description: ""
 inputs:
   - name: domain

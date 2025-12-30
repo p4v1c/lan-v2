@@ -1,6 +1,6 @@
 id: Enum delegations
 name: Enum Delegations
-category: Enumération
+category: ldeep
 checklist_keys: ["ad_delegations"]
 description: ""
 inputs:

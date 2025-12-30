@@ -1,6 +1,6 @@
 id: nxc_vnc_default
 name: vnc Default Creds
-category: "Enumération"
+category: "nxc"
 description: "Test de logins par défaut sur vnc."
 checklist_keys: ["anon_nvc"]
 inputs:

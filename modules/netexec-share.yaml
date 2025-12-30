@@ -1,6 +1,6 @@
 id: nxc
 name: NetExec (SMB Shares)
-category: Enumération
+category: nxc
 description: "Scan des partages SMB, des permissions et des accès."
 checklist_keys: ["smb_shares", "anon_smb"]
 inputs:

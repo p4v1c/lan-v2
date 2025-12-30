@@ -458,59 +458,6 @@ body {
 .close-modal-btn { background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); }
 .modal-body { padding: 1.5rem; overflow-y: auto; flex-grow: 1; }
 
-.json-tree { font-family: 'Fira Code', monospace; font-size: 0.9rem; line-height: 1.6; }
-.json-tree ul { list-style: none; margin: 0; padding-left: 1.5rem; border-left: 1px solid var(--bg-separator); }
-.json-tree > ul { border-left: none; padding-left: 0; }
-.json-key { color: var(--json-key); }
-.json-string { color: var(--json-string); }
-.json-number { color: var(--json-number); }
-.json-boolean { color: var(--json-boolean); }
-.json-null { color: var(--text-muted); font-style: italic; }
-.json-togglable { cursor: pointer; display: flex; align-items: center; }
-.json-togglable::before { content: '▸'; display: inline-block; margin-right: 5px; color: var(--text-muted); transition: transform 0.2s; }
-.json-togglable.open::before { transform: rotate(90deg); }
-.json-togglable.open + ul { display: block; }
-.json-togglable + ul { display: none; }
-
-/* =========================================
-   8. SPECIFIC: PAGES NOTE & LOGS
-   ========================================= */
-/* Pour la page NOTE (Textarea) */
-.note-textarea {
-    width: 100%;
-    height: 60vh;
-    border: 1px solid var(--bg-separator);
-    border-radius: var(--radius-sm);
-    padding: 1.5rem;
-    background: var(--bg-body);
-    color: var(--text-primary);
-    font-family: 'Inter', sans-serif;
-    font-size: 1rem;
-    line-height: 1.6;
-    resize: none;
-    outline: none;
-    transition: border-color 0.2s;
-}
-.note-textarea:focus { border-color: var(--accent-color); }
-
-/* Pour la page LOGS (Console style) */
-.logs-console {
-    background-color: #0F111A; /* Fond sombre forcé */
-    color: #76FF03;            /* Texte vert console */
-    padding: 1.5rem;
-    font-family: 'Fira Code', monospace;
-    font-size: 0.9rem;
-    height: 70vh;
-    overflow-y: auto;
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
-    line-height: 1.5;
-}
-.log-entry { margin-bottom: 0.2rem; display: flex; gap: 0.5rem; }
-.log-ts { color: #64748B; user-select: none; }
-.log-info { color: #3B82F6; }
-.log-warn { color: #F59E0B; }
-.log-err { color: #EF4444; }
-
 /* =========================================
    9. WEBSHELL (Terminal Flottant)
    ========================================= */
@@ -805,39 +752,62 @@ body {
     min-width: 200px;
 }
 
-/* --- BARRE DE CATEGORIES (MODULES) --- */
-.category-bar {
+/* --- MODULES LIST (NEW FOLDER VIEW) --- */
+#modules-list details {
+    border-bottom: 1px solid var(--bg-separator);
+}
+
+#modules-list summary {
     display: flex;
-    flex-wrap: wrap; /* C'est cette ligne qui fait le retour à la ligne */
-    gap: 6px;        /* Espacement un peu réduit pour en caser plus */
-    padding: 0.5rem 1rem;
-    overflow-x: visible; /* On désactive le scroll */
-}
-
-/* Style des boutons (inchangé, juste ajusté pour le confort) */
-.category-pill {
-    padding: 4px 10px;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
     cursor: pointer;
-    background-color: var(--bg-hover);
-    color: var(--text-secondary);
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
-    /* On retire flex-shrink pour qu'ils gardent leur taille */
-}
-
-.category-pill:hover {
-    background-color: var(--bg-separator);
+    font-weight: 600;
     color: var(--text-primary);
+    transition: background 0.2s;
+    outline: none;
 }
 
-.category-pill.active {
-    background-color: var(--accent-subtle);
-    color: var(--accent-color);
-    border-color: var(--accent-color);
+#modules-list summary:hover {
+    background: var(--bg-hover);
 }
+
+#modules-list summary::marker {
+    content: '▶ ';
+    font-size: 0.7em;
+    color: var(--text-secondary);
+}
+
+#modules-list details[open] > summary::marker {
+    content: '▼ ';
+}
+
+#modules-list details[open] > summary {
+    color: var(--accent-color);
+}
+
+.module-category-content {
+    padding-left: 15px;
+    border-left: 2px solid var(--bg-separator);
+    margin-left: 12px;
+}
+
+.module-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--bg-separator);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.module-item:last-child {
+    border-bottom: none;
+}
+
+.module-item:hover {
+    background: var(--bg-hover);
+}
+
 
 /* Filtres Manual / Auto */
 .filter-btn {

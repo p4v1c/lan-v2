@@ -1,6 +1,6 @@
 id: nxc_webdav
 name: NetExec WebDAV
-category: Enumération
+category: nxc
 description: "Vérifie si le service WebClient est actif (Vecteur d'attaque pour PetitPotam/Relay)."
 checklist_keys: ["webdav"]
 inputs:

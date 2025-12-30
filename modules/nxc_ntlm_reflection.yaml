@@ -1,6 +1,6 @@
 id: nxc_ntlm_reflection
 name: NetExec NTLM Reflection
-category: Enumération
+category: nxc
 description: "Vérifie si la cible est vulnérable à la réflexion NTLM (MS08-068)."
 inputs:
   - name: target

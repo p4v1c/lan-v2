@@ -1,6 +1,6 @@
 id: nxc_ftp_anon
 name: FTP Anonymous
-category: Enumération
+category: nxc
 description: "Test du compte 'anonymous' sur FTP."
 checklist_keys: ["anon_ftp"]
 inputs:

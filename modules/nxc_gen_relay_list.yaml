@@ -1,6 +1,6 @@
 id: nxc_gen_relay_list
 name: NetExec Gen Relay List
-category: Exploitation
+category: nxc
 description: "Génère une liste de cibles vulnérables au NTLM Relay (SMB Signing Disabled) dans /workspace/relay_targets.txt."
 inputs:
   - name: target

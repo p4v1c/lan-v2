@@ -1,6 +1,6 @@
 id: bloodhound_collector
 name: BloodHound Collector
-category: Enumération
+category: Others
 description: ""
 inputs:
   - name: domain

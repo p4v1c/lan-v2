@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let liveShellInterval = null;
     let tasksInterval = null;
     let selectedModuleForRun = null;
-    let currentCategory = 'All'; 
     let currentModeFilter = 'all'; // NOUVEAU : Filtre par défaut
 
     const modulesListEl = document.getElementById('modules-list');
@@ -145,50 +144,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/modules');
             if(res.ok) {
                 allModules = await res.json();
-                renderCategoryFilters(); 
                 renderModulesList();
             }
         } catch(e) { console.error("Erreur modules", e); }
     }
 
-    function renderCategoryFilters() {
-        const catContainer = document.getElementById('category-filters');
-        if (!catContainer) return;
-
-        const categories = ['All', ...new Set(allModules.map(m => m.category || 'Autre').filter(Boolean))];
-        
-        catContainer.innerHTML = '';
-
-        categories.forEach(cat => {
-            const btn = document.createElement('button');
-            btn.className = `category-pill ${currentCategory === cat ? 'active' : ''}`;
-            btn.textContent = cat === 'All' ? 'Tout' : cat;
-            
-            btn.onclick = () => {
-                currentCategory = cat;
-                document.querySelectorAll('.category-pill').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                renderModulesList();
-            };
-            catContainer.appendChild(btn);
-        });
-    }
-
     function renderModulesList() {
         if(!modulesListEl) return;
         modulesListEl.innerHTML = '';
-
+    
         const searchTerm = moduleSearchEl ? moduleSearchEl.value.toLowerCase() : '';
-
+    
         const filtered = allModules.filter(mod => {
-            // 1. Filtre Catégorie
-            const matchCategory = (currentCategory === 'All') || (mod.category === currentCategory) || (!mod.category && currentCategory === 'Autre');
-            
-            // 2. Filtre Recherche
             const matchSearch = mod.name.toLowerCase().includes(searchTerm) || 
                                 (mod.description && mod.description.toLowerCase().includes(searchTerm));
             
-            // 3. Filtre Mode (Manual/Auto)
             let matchMode = true;
             if (currentModeFilter === 'manual') {
                 matchMode = (mod.mode === 'manual');
@@ -196,38 +166,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 matchMode = (mod.mode === 'auto');
             }
             
-            return matchCategory && matchSearch && matchMode;
+            return matchSearch && matchMode;
         });
-
+    
         if(filtered.length === 0) {
             modulesListEl.innerHTML = '<div style="padding:15px; text-align:center; color:var(--text-secondary); font-style:italic;">Aucun module trouvé.</div>';
             return;
         }
-
-        filtered.forEach(mod => {
-            const div = document.createElement('div');
-            div.style.padding = '12px 15px';
-            div.style.borderBottom = '1px solid var(--bg-separator)';
-            div.style.cursor = 'pointer';
-            div.style.transition = 'background 0.2s';
+    
+        const groupedByCategory = filtered.reduce((acc, mod) => {
+            const category = mod.category || 'Autre';
+            if (!acc[category]) {
+                acc[category] = [];
+            }
+            acc[category].push(mod);
+            return acc;
+        }, {});
+    
+        const sortedCategories = Object.keys(groupedByCategory).sort();
+    
+        sortedCategories.forEach(category => {
+            const details = document.createElement('details');
+            details.open = false; 
+    
+            const summary = document.createElement('summary');
+            summary.innerHTML = `<span>${escapeHtml(category)}</span> <span class="badge">${groupedByCategory[category].length}</span>`;
+            details.appendChild(summary);
+    
+            const categoryContent = document.createElement('div');
+            categoryContent.className = 'module-category-content';
             
-            const modeBadge = mod.mode === 'auto' ? '<span class="badge" style="background:#8b5cf6; color:white; margin-left:5px; font-size:0.5rem;">AUTO</span>' : '';
-
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-weight:600; color:var(--text-primary);">
-                        ${escapeHtml(mod.name)}
-                        ${modeBadge}
+            groupedByCategory[category].forEach(mod => {
+                const div = document.createElement('div');
+                div.className = 'module-item';
+                
+                const modeBadge = mod.mode === 'auto' ? '<span class="badge" style="background:#8b5cf6; color:white; margin-left:5px; font-size:0.5rem;">AUTO</span>' : '';
+    
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-weight:600; color:var(--text-primary);">
+                            ${escapeHtml(mod.name)}
+                            ${modeBadge}
+                        </div>
                     </div>
-                    ${mod.category ? `<span class="badge" style="font-size:0.6rem; background:var(--bg-hover); color:var(--text-secondary);">${escapeHtml(mod.category)}</span>` : ''}
-                </div>
-                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">${escapeHtml(mod.description || '')}</div>
-            `;
-            
-            div.onmouseover = () => div.style.background = 'var(--bg-hover)';
-            div.onmouseout = () => div.style.background = 'transparent';
-            div.onclick = () => openConfigModal(mod);
-            modulesListEl.appendChild(div);
+                    <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">${escapeHtml(mod.description || '')}</div>
+                `;
+                
+                div.onclick = () => openConfigModal(mod);
+                categoryContent.appendChild(div);
+            });
+    
+            details.appendChild(categoryContent);
+            modulesListEl.appendChild(details);
         });
     }
 
@@ -533,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- THEME & NOTES ---
+    // --- THEME ---
     const themeBtn = document.getElementById('theme-toggle');
     const body = document.body;
     const currentTheme = localStorage.getItem('theme') || 'light';
@@ -544,254 +534,8 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('theme', newTheme);
     });
 
-    const noteTextarea = document.querySelector('.card textarea'); 
-    const noteStatus = document.getElementById('note-status');
-    let saveTimeout;
-    
-    const autoResizeNote = () => {
-        if(!noteTextarea) return;
-        noteTextarea.style.height = 'auto';
-        noteTextarea.style.height = (noteTextarea.scrollHeight + 5) + 'px';
-    };
-
-    async function saveNote() {
-        if (!noteTextarea) return;
-        try {
-            await fetch('/api/note', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: noteTextarea.value })
-            });
-            if(noteStatus) {
-                noteStatus.style.opacity = '1';
-                setTimeout(() => noteStatus.style.opacity = '0', 2000);
-            }
-        } catch(e) {}
-    }
-
-    if (noteTextarea && window.location.pathname.includes('/note')) {
-        fetch('/api/note')
-            .then(r => r.json())
-            .then(d => {
-                noteTextarea.value = d.content || '';
-                autoResizeNote();
-            });
-            
-        noteTextarea.addEventListener('input', () => {
-            autoResizeNote();
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(saveNote, 1000);
-        });
-    }
-
     function escapeHtml(text) {
         if (!text) return "";
         return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    }
-
-    // --- LOGS & RESULTS ---
-    const logsTableBody = document.getElementById('logs-table-body');
-    const logsSearchInput = document.getElementById('logs-search');
-    const logsSortBtn = document.getElementById('logs-sort-btn');
-    const logModalTitle = document.getElementById('modal-cmd-title');
-    const logModalOutput = document.getElementById('modal-cmd-output');
-    const logModal = document.getElementById('log-output-modal');
-    const closeLogModalBtn = document.getElementById('close-log-modal');
-
-    let allLogs = [];
-    let sortDesc = true;
-
-    if (logsTableBody) fetchLogs();
-
-    async function fetchLogs() {
-        try {
-            const res = await fetch('/api/logs_history');
-            if (res.ok) {
-                allLogs = await res.json();
-                if (allLogs.error) {
-                    logsTableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--danger);">❌ DB Erreur.</td></tr>';
-                    return;
-                }
-                renderLogs();
-            }
-        } catch (e) {}
-    }
-
-    function renderLogs() {
-        const filter = logsSearchInput ? logsSearchInput.value.toLowerCase() : "";
-        let filtered = allLogs.filter(l => 
-            (l.command && l.command.toLowerCase().includes(filter)) || 
-            (l.timestamp && l.timestamp.toLowerCase().includes(filter))
-        );
-
-        filtered.sort((a, b) => {
-            const da = new Date(a.timestamp);
-            const db = new Date(b.timestamp);
-            return sortDesc ? db - da : da - db;
-        });
-
-        logsTableBody.innerHTML = '';
-        if (filtered.length === 0) {
-            logsTableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:2rem; color:var(--text-muted);">Aucun log trouvé.</td></tr>';
-            return;
-        }
-
-        filtered.forEach(log => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="font-family:'Fira Code', monospace; font-size:0.85rem; color:var(--text-secondary);">${log.timestamp}</td>
-                <td class="table-code" style="color:var(--accent-color); font-weight:600;">$ ${escapeHtml(log.command)}</td>
-                <td style="text-align:center;">
-                    <button class="btn btn-outline" style="padding:4px 10px; font-size:0.8rem;" onclick="showLogDetails(${log.id})">👁️ Voir</button>
-                </td>
-            `;
-            logsTableBody.appendChild(tr);
-        });
-    }
-
-    if (logsSearchInput) logsSearchInput.addEventListener('input', renderLogs);
-    if (logsSortBtn) logsSortBtn.addEventListener('click', () => {
-        sortDesc = !sortDesc;
-        const indicator = document.getElementById('sort-indicator');
-        if(indicator) indicator.textContent = sortDesc ? "DESC ⬇️" : "ASC ⬆️";
-        renderLogs();
-    });
-
-    window.showLogDetails = function(id) {
-        const log = allLogs.find(l => l.id === id);
-        if (!log) return;
-        if(logModalTitle) logModalTitle.textContent = log.command;
-        if(logModalOutput) logModalOutput.textContent = log.output || "Aucune sortie.";
-        if(logModal) logModal.classList.add('active');
-    };
-
-    if(closeLogModalBtn) closeLogModalBtn.onclick = () => logModal.classList.remove('active');
-
-    const treeContent = document.getElementById('results-tree-content');
-    const logViewerContent = document.getElementById('log-viewer-content');
-    const logViewerTitle = document.getElementById('log-viewer-title');
-    const btnDownload = document.getElementById('btn-download-log');
-
-    window.refreshResultsTree = async function() {
-        if (!treeContent) return;
-        try {
-            treeContent.innerHTML = '<div style="text-align: center; color: var(--text-muted);">Chargement...</div>';
-            const res = await fetch('/api/results/tree');
-            if (res.ok) {
-                const tree = await res.json();
-                renderTree(tree);
-            } else {
-                treeContent.innerHTML = '<div style="color:var(--danger)">Erreur chargement arbre.</div>';
-            }
-        } catch(e) {
-            treeContent.innerHTML = '<div style="color:var(--danger)">Erreur chargement arbre.</div>';
-        }
-    };
-
-    function renderTree(tree) {
-        treeContent.innerHTML = '';
-        const subnets = Object.keys(tree).sort();
-
-        if (subnets.length === 0) {
-            treeContent.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--text-muted); font-style:italic;">Aucun résultat parsé. Lancez des scans !</div>';
-            return;
-        }
-
-        subnets.forEach(subnet => {
-            const subnetDetails = document.createElement('details');
-            subnetDetails.open = true;
-            
-            const summary = document.createElement('summary');
-            summary.innerHTML = `🌐 ${escapeHtml(subnet)} <span class="badge badge-info" style="margin-left:auto; font-size:0.7rem;">${Object.keys(tree[subnet]).length} IPs</span>`;
-            subnetDetails.appendChild(summary);
-
-            const subnetContainer = document.createElement('div');
-            subnetContainer.className = 'tree-child';
-
-            const ips = Object.keys(tree[subnet]).sort();
-            
-            ips.forEach(ip => {
-                const ipDetails = document.createElement('details');
-                
-                const ipSummary = document.createElement('summary');
-                ipSummary.style.fontSize = '0.95rem';
-                ipSummary.innerHTML = `💻 ${escapeHtml(ip)}`;
-                ipDetails.appendChild(ipSummary);
-
-                const ipContainer = document.createElement('div');
-                ipContainer.className = 'tree-child';
-
-                tree[subnet][ip].forEach(task => {
-                    const item = document.createElement('div');
-                    item.className = 'result-item';
-                    item.innerHTML = `
-                        <div style="display:flex; flex-direction:column;">
-                            <span style="font-weight:500;">${escapeHtml(task.module)}</span>
-                            <span style="font-size:0.75rem; opacity:0.7;">${task.date}</span>
-                        </div>
-                        <button onclick="deleteResult(event, ${task.id})" style="background:none; border:none; color:var(--danger); cursor:pointer; opacity:0.6; padding:4px;">🗑</button>
-                    `;
-                    item.onclick = (e) => {
-                        if(e.target.tagName === 'BUTTON') return;
-                        document.querySelectorAll('.result-item').forEach(el => el.classList.remove('active'));
-                        item.classList.add('active');
-                        loadResultLog(task.id, task.module, task.has_log);
-                    };
-                    ipContainer.appendChild(item);
-                });
-
-                ipDetails.appendChild(ipContainer);
-                subnetContainer.appendChild(ipDetails);
-            });
-
-            subnetDetails.appendChild(subnetContainer);
-            treeContent.appendChild(subnetDetails);
-        });
-    }
-
-    async function loadResultLog(id, moduleName, hasLog, isVuln) {
-        if(!logViewerTitle) return;
-        logViewerTitle.textContent = `${moduleName}`;
-        
-        // On cache le bouton download pour l'instant car c'est du texte BDD
-        if(btnDownload) btnDownload.style.display = 'none'; 
-        
-        logViewerContent.textContent = "Chargement...";
-        
-        try {
-            // C'est ici qu'on change la logique
-            let url = `/api/tasks/${id}/output`; // Par défaut (Tâche)
-            
-            // Si l'arbre envoie un flag disant que c'est une vuln (cf point 2 plus haut)
-            // Note: Il faut que tu aies ajouté "is_vuln": true dans le Python get_results_tree
-            if (moduleName.includes("[")) { // Astuce simple: si le titre contient [CRITIQUE] etc.
-                 url = `/api/vulns/${id}/details`;
-            }
-
-            const res = await fetch(url);
-            const data = await res.json();
-            logViewerContent.textContent = data.output;
-        } catch(e) {
-            logViewerContent.textContent = "Erreur lors du chargement.";
-        }
-    }
-
-    window.deleteResult = async function(e, taskId) {
-        e.stopPropagation();
-        if(!confirm("Supprimer ce résultat ?")) return;
-        
-        try {
-            await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
-            if (logViewerTitle && logViewerTitle.textContent.includes(`ID: ${taskId})`)) {
-                logViewerContent.innerHTML = '';
-                logViewerTitle.textContent = 'Sélectionnez un résultat';
-                btnDownload.style.display = 'none';
-            }
-            refreshResultsTree();
-        } catch(e) { alert("Erreur suppression"); }
-    };
-
-    if (treeContent) {
-        refreshResultsTree();
     }
 });

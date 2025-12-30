@@ -1,6 +1,6 @@
 id: Kerberoasting
 name: Kerberoasting
-category: Exploitation
+category: Impacket
 description: ""
 checklist_keys: ["kerberoast"] 
 inputs:

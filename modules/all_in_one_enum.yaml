@@ -1,6 +1,6 @@
 id: all_in_one_enum
 name: All-in-One Enumeration
-category: Enumeration
+category: auto
 description: "Combine several enumeration and no-auth scans."
 inputs:
   - name: target
@@ -37,45 +37,3 @@ steps:
 
   - name: LDAP Security
     command: "nxc ldap {{target}} -u '{{username}}' -p '{{password}}'"
-
-parsing:
-  mode: "text" 
-  ip_extract: "\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
-  rules:
-    # From SMB Security (nxc_smb_security.yaml)
-    - name: "SMB Signing Désactivé (Relay Possible !)"
-      regex: "signing:False"
-      badge: "🔴 [DANGER]"
-    - name: "SMBv1 Activé (EternalBlue ?)"
-      regex: "SMBv1:True"
-      badge: "🔴 [CRITIQUE]"
-
-    # From Anonymous SMB Shares (netexec-share.yaml)
-    - name: "Partage Writable (R/W)"
-      regex: "READ,WRITE"
-      badge: "🔴 [DANGER]"
-
-    - name: "Null Session Activée"
-      regex: "Null Auth:True"
-      badge: "🟠 [RISQUE]"
-
-    # From SSH Default Creds (nxcc_ssh_default.yaml)
-    - name: "Compte SSH Compromis"
-      regex: '\[\+\]'
-      badge: "🔴 [CRITIQUE]"
-
-    # From FTP Anonymous (ftp_anonyme.yaml)
-    - name: "FTP Anonyme Activé"
-      regex: '\[\+\]'
-      badge: "🟠 [MOYEN]"
-
-    - name: "LDAP Null Bind (Anonyme)"
-      regex: '\[\+\]'
-      badge: "🟠 [MOYEN]"
-
-    - name: "LDAP Signing NON Forcé (Relay Possible)"
-      regex: "signing:(False|None)"
-      badge: "🔴 [CRITIQUE]"
-    - name: "Channel Binding Désactivé"
-      regex: "channel binding:Never"
-      badge: "🟠 [RISQUE]"

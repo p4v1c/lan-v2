@@ -1,6 +1,6 @@
 id: nxc_ldap_anon
 name: LDAP Anonymous Bind
-category: "Enumération"
+category: "nxc"
 description: "Test de connexion LDAP anonyme (Null Bind)."
 checklist_keys: ["anon_ldap"]
 inputs:

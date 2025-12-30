@@ -1,6 +1,6 @@
 id: auto_webdav_coercion
 name: ⛓️ Auto WebDAV Coercion (Relay)
-category: Exploitation
+category: auto
 description: "Injection DNS + PetitPotam WebDAV (Port 80/8080) pour Relay LDAPS/ADCS."
 inputs:
   - name: dc_ip

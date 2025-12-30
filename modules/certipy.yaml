@@ -1,6 +1,6 @@
 id: certipy_find
 name: "ADCS Vuln"
-category: Enumération
+category: certipy
 description: ""
 checklist_keys: ["adcs_enum"]
 inputs:

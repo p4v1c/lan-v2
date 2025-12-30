@@ -1,6 +1,6 @@
 id: ldeep_pkis
 name: LDEEP PKI & Certs
-category: Enumération
+category: ldeep
 description: ""
 inputs:
   - name: dc_ip

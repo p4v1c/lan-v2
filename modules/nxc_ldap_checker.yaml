@@ -1,6 +1,6 @@
 id: nxc_ldap_checker
 name: NetExec LDAP Security
-category: Enumération
+category: nxc
 description: "Vérifie la sécurité LDAP (Signing & Channel Binding) via le banner standard."
 checklist_keys: ["sec_ldap"]
 inputs:
@@ -16,24 +16,13 @@ inputs:
 command: "nxc ldap {{target}} -u '{{username}}' -p '{{password}}'"
 
 parsing:
-  mode: "text"
-  # Regex IP standard
-  ip_extract: "\\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b"
-  
+  mode: "text"  
   rules:
     - name: "LDAP Signing NON Forcé (Relay Possible)"
       regex: "signing:(False|None)"
       badge: "🔴 [CRITIQUE]"
       
-    - name: "LDAP Signing Forcé"
-      regex: "signing:True"
-      badge: "✅ [OK]"
-
-    # CHANNEL BINDING
     - name: "Channel Binding Désactivé"
       regex: "channel binding:Never"
       badge: "🟠 [RISQUE]"
       
-    - name: "Channel Binding Activé"
-      regex: "channel binding:True"
-      badge: "✅ [OK]"

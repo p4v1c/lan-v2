@@ -1,7 +1,7 @@
 id: ldeep_trusts
 name: LDEEP Trusts
-category: Enumération
-checklist_keys: ["ad_trusts"]   # <--- AJOUTER ICI
+category: ldeep
+checklist_keys: ["ad_trusts"]
 description: ""
 inputs:
   - name: domain

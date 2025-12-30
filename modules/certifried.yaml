@@ -1,6 +1,6 @@
 id: certifried_detection
 name: Certifried (CVE-2022-26923) Detection
-category: Exploitation
+category: certipy
 description: "Tente d'obtenir un certificat machine via Certipy pour détecter Certifried (CVE-2022-26923). La détection est basée sur la réussite de la requête et l'absence d'OID du SID dans le certificat."
 checklist_keys: ["cve_2022_26923"]
 inputs:
@@ -23,7 +23,7 @@ inputs:
     label: Nom de l'Autorité de Certification (CA)
     placeholder: ESSOS-CA
   - name: template_name
-    label: Nom du template de certificat (doit permettre l'authentification machine)
+    label: Nom du template de certificat
     placeholder: Machine
 
 command: "certipy req -u '{{username}}'@{{domain}} -p '{{password}}' -dc-ip '{{dc_ip}}' -target '{{target_machine_ip}}' -ca '{{ca_name}}' -template '{{template_name}}'"

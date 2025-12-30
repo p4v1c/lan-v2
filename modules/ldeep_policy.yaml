@@ -1,6 +1,6 @@
 id: ldeep_domain_policy
 name: LDEEP Domain Policy
-category: Enumération
+category: ldeep
 description: ""
 inputs:
   - name: domain

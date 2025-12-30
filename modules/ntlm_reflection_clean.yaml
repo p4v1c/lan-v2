@@ -1,6 +1,6 @@
 id: clean_ntlm_reflection
 name: Cleanup NTLM Reflection
-category: Exploitation
+category: auto
 description: "Supprime l'enregistrement DNS spécifique (localhost1UWh...)."
 inputs:
   - name: dc_ip
