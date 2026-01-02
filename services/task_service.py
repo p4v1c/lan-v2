@@ -51,16 +51,30 @@ class TaskService:
         if not module: return {"error": "Module introuvable"}
 
         target = inputs.get("target") or inputs.get("ip") or inputs.get("range") or inputs.get("host") or inputs.get("dc_ip") or "Workflow"
-        first_cmd = module.get("command", "Multi-step Workflow...")
-        if "command" in module:
-            for k, v in inputs.items():
-                first_cmd = first_cmd.replace(f"{{{{{k}}}}}", str(v))
-
-        context_json = json.dumps(inputs)
+        
         conn = get_db_connection()
         if not conn: return {"error": "DB Error"}
+
         try:
             cur = conn.cursor()
+
+            # Check for existing task
+            cur.execute("""
+                SELECT id FROM scan_tasks 
+                WHERE module_id = %s AND target = %s AND status IN ('running', 'completed', 'parsing', 'hidden')
+            """, (module_id, target))
+            existing_task = cur.fetchone()
+            if existing_task:
+                conn.close()
+                return {"error": f"Ce module a déjà été lancé sur la cible '{target}'."}
+
+            first_cmd = module.get("command", "Multi-step Workflow...")
+            if "command" in module:
+                for k, v in inputs.items():
+                    first_cmd = first_cmd.replace(f"{{{{{k}}}}}", str(v))
+
+            context_json = json.dumps(inputs)
+            
             cur.execute("""
                 INSERT INTO scan_tasks (tab_id, module_id, module_name, command_executed, target, status, current_step, context)
                 VALUES (%s, %s, %s, %s, %s, 'pending', 0, %s) RETURNING id
@@ -70,7 +84,7 @@ class TaskService:
             conn.close()
             return {"task_id": tid}
         except Exception as e: 
-            conn.close()
+            if conn: conn.close()
             return {"error": str(e)}
 
     def start_task(self, task_id):
