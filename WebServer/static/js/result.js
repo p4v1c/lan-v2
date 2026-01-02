@@ -1,4 +1,3 @@
-/* static/js/result.js */
 
 document.addEventListener('DOMContentLoaded', () => {
     const resultsSummaryContent = document.getElementById('results-summary-content');
@@ -7,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshButton = document.getElementById('refresh-summary');
 
     let currentActiveIpItem = null;
+    let lastSelectedIpData = null;
     const severityOrder = { "CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1, "INFO": 0 };
 
     const getSeverityClass = (severity) => {
@@ -19,25 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'info';
     };
 
-    const createSeverityDots = (highestSeverity, vulnCounts) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'severity-dots';
-        const severities = ['critical', 'high', 'medium', 'low'];
-        let dotsAdded = 0;
-
-        for (const sev of severities) {
-            if (dotsAdded < 3 && vulnCounts[sev.toUpperCase()] > 0) {
-                const dot = document.createElement('span');
-                dot.className = `severity-dot ${sev}`;
-                wrapper.appendChild(dot);
-                dotsAdded++;
-            }
-        }
-        // If no vulns but we want to show something, can add logic here.
-        // For now, no dots if no vulns.
-        return wrapper;
-    };
-    
     const fetchAndRenderSummary = async () => {
         if (!resultsSummaryContent) return;
         resultsSummaryContent.innerHTML = '<div class="no-results-message">Chargement...</div>';
@@ -47,27 +28,41 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`);
             const summary = await res.json();
             renderVulnerabilitySummary(summary);
+            
+            if (lastSelectedIpData) {
+                const updatedIpData = findIpDataInSummary(summary, lastSelectedIpData.ip);
+                if (updatedIpData) {
+                    lastSelectedIpData = updatedIpData;
+                    displayIpDetails(updatedIpData);
+                } else {
+                    detailPanelTitle.textContent = 'Sélectionnez un Hôte';
+                    ipDetailsContent.innerHTML = '<div class="no-results-message">Cet hôte n\'a plus de données.</div>';
+                    lastSelectedIpData = null;
+                }
+            }
         } catch (e) {
             resultsSummaryContent.innerHTML = `<div class="no-results-message">Erreur: ${e.message}</div>`;
         }
     };
+    
+    const findIpDataInSummary = (summaryData, ip) => {
+        for (const subnet in summaryData) {
+            const found = summaryData[subnet].find(ipData => ipData.ip === ip);
+            if (found) return found;
+        }
+        return null;
+    };
 
     const renderVulnerabilitySummary = (summaryData) => {
         resultsSummaryContent.innerHTML = '';
-
         if (Object.keys(summaryData).length === 0) {
-            resultsSummaryContent.innerHTML = `
-                <div class="no-results-message">
-                    <svg class="icon-xl" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span>Aucun hôte trouvé. Lancez des scans pour voir les résultats.</span>
-                </div>`;
+            resultsSummaryContent.innerHTML = `<div class="no-results-message">Aucun hôte trouvé.</div>`;
             return;
         }
 
         Object.keys(summaryData).sort().forEach(subnet => {
             const subnetGroup = document.createElement('div');
             subnetGroup.className = 'subnet-group';
-            
             const details = document.createElement('details');
             details.open = true;
             const summary = document.createElement('summary');
@@ -81,22 +76,19 @@ document.addEventListener('DOMContentLoaded', () => {
             summaryData[subnet].sort((a,b) => {
                 const ipA = a.ip.split('.').map(Number);
                 const ipB = b.ip.split('.').map(Number);
-                for (let i = 0; i < 4; i++) {
-                    if (ipA[i] !== ipB[i]) return ipA[i] - ipB[i];
-                }
+                for (let i = 0; i < 4; i++) { if (ipA[i] !== ipB[i]) return ipA[i] - ipB[i]; }
                 return 0;
             }).forEach(ipData => {
                 const ipItem = document.createElement('div');
                 ipItem.className = 'ip-item';
+                if (lastSelectedIpData && ipData.ip === lastSelectedIpData.ip) {
+                    ipItem.classList.add('active');
+                    currentActiveIpItem = ipItem;
+                }
                 
                 const leftContent = document.createElement('div');
                 leftContent.className = 'ip-item-left';
-                
-                // Intégration du nom d'hôte
-                let hostnameDisplay = '';
-                if (ipData.hostname) {
-                    hostnameDisplay = `<span class="hostname">(${escapeHtml(ipData.hostname)})</span>`;
-                }
+                const hostnameDisplay = ipData.hostname ? `<span class="hostname">(${escapeHtml(ipData.hostname)})</span>` : '';
                 leftContent.innerHTML = `<span>${escapeHtml(ipData.ip)}</span> ${hostnameDisplay}`;
 
                 const vulnCountSpan = document.createElement('span');
@@ -111,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (currentActiveIpItem) currentActiveIpItem.classList.remove('active');
                     ipItem.classList.add('active');
                     currentActiveIpItem = ipItem;
+                    lastSelectedIpData = ipData;
                     displayIpDetails(ipData);
                 });
             });
@@ -121,59 +114,49 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const displayIpDetails = (ipData) => {
-        // Mise à jour du titre avec le nom d'hôte
         let title = ipData.ip;
-        if (ipData.hostname) {
-            title += ` - ${ipData.hostname}`;
-        }
+        if (ipData.hostname) title += ` - ${ipData.hostname}`;
         detailPanelTitle.textContent = title;
-
         ipDetailsContent.innerHTML = '';
 
         // --- Vulnerabilities Section ---
         const vulnsSection = document.createElement('div');
         vulnsSection.className = 'detail-section';
-        vulnsSection.innerHTML = `<div class="detail-section-header">
-            <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span>Vulnérabilités (${ipData.vulnerabilities.length})</span>
-        </div>`;
+        vulnsSection.innerHTML = `<div class="detail-section-header"><span>Vulnérabilités (${ipData.vulnerabilities.length})</span></div>`;
         const vulnListContainer = document.createElement('div');
         vulnListContainer.className = 'vulnerability-list';
         
         if (ipData.vulnerabilities.length === 0) {
-            vulnListContainer.innerHTML = `<div class="no-results-message">Aucune vulnérabilité trouvée pour cet hôte.</div>`;
+            vulnListContainer.innerHTML = `<div class="no-results-message">Aucune vulnérabilité.</div>`;
         } else {
             ipData.vulnerabilities.sort((a, b) => (severityOrder[b.severity] || 0) - (severityOrder[a.severity] || 0))
             .forEach(vuln => {
                 const vulnEntry = document.createElement('div');
                 vulnEntry.className = 'vulnerability-entry';
-                
                 const summary = document.createElement('div');
                 summary.className = 'vuln-summary';
                 summary.innerHTML = `
                     <span class="vuln-title">${escapeHtml(vuln.title)}</span>
                     <div>
                         <span class="vuln-severity ${getSeverityClass(vuln.severity)}">${escapeHtml(vuln.severity)}</span>
+                        <button class="delete-btn" data-vuln-id="${vuln.id}" title="Supprimer la vulnérabilité">🗑️</button>
                         <button class="vuln-details-toggle"></button>
                     </div>`;
-
+                
                 const details = document.createElement('div');
                 details.className = 'vuln-full-details';
                 details.innerHTML = `<p><strong>Module:</strong> ${escapeHtml(vuln.module)}</p>
                                      <p><strong>Date:</strong> ${escapeHtml(vuln.date)}</p>
                                      <p>${escapeHtml(vuln.details)}</p>`;
-                
+
                 vulnEntry.appendChild(summary);
                 vulnEntry.appendChild(details);
                 vulnListContainer.appendChild(vulnEntry);
 
                 summary.querySelector('.vuln-details-toggle').addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const btn = e.target;
-                    const detailsDiv = btn.closest('.vulnerability-entry').querySelector('.vuln-full-details');
-                    const isVisible = detailsDiv.style.display === 'block';
-                    detailsDiv.style.display = isVisible ? 'none' : 'block';
-                    btn.textContent = isVisible ? '' : '';
+                    const detailsDiv = e.currentTarget.closest('.vulnerability-entry').querySelector('.vuln-full-details');
+                    detailsDiv.style.display = detailsDiv.style.display === 'block' ? 'none' : 'block';
                 });
             });
         }
@@ -183,27 +166,24 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Scans Section ---
         const scansSection = document.createElement('div');
         scansSection.className = 'detail-section';
-        scansSection.innerHTML = `<div class="detail-section-header">
-            <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            <span>Modules Exécutés (${ipData.scans.length})</span>
-        </div>`;
+        scansSection.innerHTML = `<div class="detail-section-header"><span>Modules Exécutés (${ipData.scans.length})</span></div>`;
         const scanListContainer = document.createElement('div');
-        scanListContainer.className = 'vulnerability-list'; // Reuse vuln list style
+        scanListContainer.className = 'vulnerability-list';
         
         if (ipData.scans.length === 0) {
-            scanListContainer.innerHTML = `<div class="no-results-message">Aucun module n'a été exécuté sur cet hôte.</div>`;
+            scanListContainer.innerHTML = `<div class="no-results-message">Aucun module exécuté.</div>`;
         } else {
             ipData.scans.sort((a, b) => new Date(b.date) - new Date(a.date))
             .forEach(scan => {
                 const scanEntry = document.createElement('div');
-                scanEntry.className = 'vulnerability-entry'; // Reuse vuln entry style
-
+                scanEntry.className = 'vulnerability-entry';
                 const summary = document.createElement('div');
-                summary.className = 'vuln-summary'; // Reuse vuln summary style
+                summary.className = 'vuln-summary';
                 summary.innerHTML = `
                     <span class="vuln-title">${escapeHtml(scan.module)}</span>
                     <div>
                         <span class="scan-date">${escapeHtml(scan.date)}</span>
+                        <button class="delete-btn" data-scan-id="${scan.id}" title="Supprimer ce scan">🗑️</button>
                         <button class="vuln-details-toggle"></button>
                     </div>`;
 
@@ -217,38 +197,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 summary.querySelector('.vuln-details-toggle').addEventListener('click', async (e) => {
                     e.stopPropagation();
-                    const btn = e.target;
-                    const detailsDiv = btn.closest('.vulnerability-entry').querySelector('.vuln-full-details');
+                    const detailsDiv = e.currentTarget.closest('.vulnerability-entry').querySelector('.vuln-full-details');
                     const isVisible = detailsDiv.style.display === 'block';
-                    
+
                     if (!isVisible && !detailsDiv.dataset.loaded) {
                         try {
                             const res = await fetch(`/api/tasks/${scan.id}/output`);
                             const data = await res.json();
-                            detailsDiv.innerHTML = `<pre>${escapeHtml(data.output || 'Aucun résultat pour ce module.')}</pre>`;
+                            detailsDiv.innerHTML = `<pre>${escapeHtml(data.output || 'Aucun résultat.')}</pre>`;
                             detailsDiv.dataset.loaded = 'true';
                         } catch (err) {
                             detailsDiv.innerHTML = `<pre>Erreur: ${err.message}</pre>`;
                         }
                     }
-                    
                     detailsDiv.style.display = isVisible ? 'none' : 'block';
-                    btn.textContent = isVisible ? '' : '';
                 });
             });
         }
         scansSection.appendChild(scanListContainer);
         ipDetailsContent.appendChild(scansSection);
+
+        // Add event listeners for delete buttons
+        ipDetailsContent.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const vulnId = e.currentTarget.dataset.vulnId;
+                const scanId = e.currentTarget.dataset.scanId;
+                
+                if (vulnId) {
+                    if (confirm('Êtes-vous sûr de vouloir supprimer cette vulnérabilité ?')) {
+                        await deleteItem('vuln', vulnId);
+                    }
+                } else if (scanId) {
+                    if (confirm('Êtes-vous sûr de vouloir supprimer ce scan ?')) {
+                        await deleteItem('scan', scanId);
+                    }
+                }
+            });
+        });
     };
     
+    const deleteItem = async (type, id) => {
+        const url = type === 'vuln' ? `/api/vulns/${id}` : `/api/tasks/${id}`;
+        try {
+            const res = await fetch(url, { method: 'DELETE' });
+            if (!res.ok) throw new Error(`Erreur lors de la suppression.`);
+            await fetchAndRenderSummary();
+        } catch (err) {
+            alert(`Erreur: ${err.message}`);
+        }
+    };
+
     const escapeHtml = (str) => {
         const p = document.createElement('p');
-        p.appendChild(document.createTextNode(str));
+        p.appendChild(document.createTextNode(str || ''));
         return p.innerHTML;
     };
 
     fetchAndRenderSummary();
     if (refreshButton) {
-        refreshButton.addEventListener('click', fetchAndRENderSummary);
+        refreshButton.addEventListener('click', fetchAndRenderSummary);
     }
 });

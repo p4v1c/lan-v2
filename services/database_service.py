@@ -40,3 +40,18 @@ class DatabaseService:
             if conn:
                 conn.close()
             return False, f"An error occurred: {e}"
+
+    def delete_vulnerability(self, vuln_id):
+        """Deletes a specific vulnerability from the database."""
+        conn = get_db_connection()
+        if not conn: return False
+        try:
+            cur = conn.cursor()
+            cur.execute("DELETE FROM vulnerabilities WHERE id = %s", (vuln_id,))
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error deleting vulnerability: {e}")
+            return False
+        finally:
+            if conn: conn.close()

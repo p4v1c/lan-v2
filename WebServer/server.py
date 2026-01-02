@@ -585,6 +585,15 @@ def export_vulns_csv():
     finally:
         if conn: conn.close()
 
+@app.route('/api/vulns/<int:vuln_id>', methods=['DELETE'])
+@login_required
+def delete_vuln(vuln_id):
+    """Supprime une vulnérabilité spécifique."""
+    success = db_service.delete_vulnerability(vuln_id)
+    if success:
+        return jsonify({'status': 'deleted'})
+    return jsonify({'error': 'Failed to delete vulnerability'}), 500
+
 
 # =========================================================
 # 9. API NOTES & LOGS (PROTÉGÉES)
