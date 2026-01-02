@@ -134,11 +134,9 @@ class TaskService:
 
             gvars = self.get_global_vars()
             export_str = "".join([f'export {k}="{v}"; ' for k, v in gvars.items()])
-            safe_cmd = cmd_to_run.replace('"', '\\"')
-
             docker_cmd = (
                 f'docker exec -w /workspace {PENTEST_CONTAINER} '
-                f'zsh -c "source ~/.zshrc && {export_str} eval \\"{safe_cmd}\\""'
+                f'zsh -c "source ~/.zshrc && {export_str} {cmd_to_run}"'
             )
 
             with open(log_path, "a") as f:
@@ -221,52 +219,62 @@ class TaskService:
         if not conn: return
         try:
             cur = conn.cursor()
-            # IMPORTANT : On récupère la colonne 'target' pour savoir QUI a été checké
-            cur.execute("SELECT id, pid, module_id, current_step, context, log_file, target FROM scan_tasks WHERE tab_id=%s AND status='running'", (tab_id,))
+            # On récupère aussi le contenu existant pour l'aggréger
+            cur.execute("SELECT id, pid, module_id, current_step, context, log_file, target, result_content FROM scan_tasks WHERE tab_id=%s AND status='running'", (tab_id,))
             
-            for task_id, pid, module_id, step_idx, context_json, log_file, target_ip in cur.fetchall():
+            for task_id, pid, module_id, step_idx, context_json, log_file, target_ip, existing_content in cur.fetchall():
                 
                 if not self._check_process_alive(pid):
                     print(f"✅ Tâche {task_id} terminée. Traitement...")
                     
                     # 1. Gestion du Log (Fichier -> BDD -> Delete)
-                    final_content = ""
+                    step_output = ""
                     if log_file and Path(log_file).exists():
                         try:
-                            final_content = Path(log_file).read_text(encoding="utf-8", errors="replace")
+                            step_output = Path(log_file).read_text(encoding="utf-8", errors="replace")
                             os.remove(log_file)
                         except: pass
 
-                    cur.execute("UPDATE scan_tasks SET status='parsing', result_content=%s, log_file=NULL WHERE id=%s", (final_content, task_id))
+                    # Concaténation des résultats
+                    if existing_content:
+                        separator = "\n\n=========================\n\n"
+                        updated_content = existing_content + separator + step_output
+                    else:
+                        updated_content = step_output
+
+
+                    cur.execute("UPDATE scan_tasks SET status='parsing', result_content=%s, log_file=NULL WHERE id=%s", (updated_content, task_id))
                     conn.commit()
 
                     # --- COEUR DE LA CHECKLIST ---
-                    # On regarde si le module lancé correspond à des items de la checklist
-                    module = self.module_service.get_module(module_id)
-                    
-                    if module and "checklist_keys" in module and target_ip:
-                        # target_ip peut être une IP ou un CIDR, on prend tel quel
-                        for c_key in module["checklist_keys"]:
-                            # On insère le fait que c'est FAIT (TRUE)
-                            # ON CONFLICT : Si déjà fait, on met juste à jour la date
-                            cur.execute (
-                                """
-                                INSERT INTO checklist_status (target, checklist_key, is_checked, updated_at)
-                                VALUES (%s, %s, TRUE, NOW())
-                                ON CONFLICT (target, checklist_key) DO UPDATE SET is_checked = TRUE, updated_at = NOW()
-                                """, (target_ip, c_key))
-                        conn.commit()
-                        print(f"   ☑️ Checklist mise à jour pour {target_ip} : {module['checklist_keys']}")
+                    try:
+                        module = self.module_service.get_module(module_id)
+                        
+                        if module and "checklist_keys" in module and target_ip:
+                            # target_ip peut être une IP ou un CIDR, on prend tel quel
+                            for c_key in module["checklist_keys"]:
+                                # On insère le fait que c'est FAIT (TRUE)
+                                # ON CONFLICT : Si déjà fait, on met juste à jour la date
+                                cur.execute (
+                                    """
+                                    INSERT INTO checklist_status (target, checklist_key, is_checked, updated_at)
+                                    VALUES (%s, %s, TRUE, NOW())
+                                    ON CONFLICT (target, checklist_key) DO UPDATE SET is_checked = TRUE, updated_at = NOW()
+                                    """, (target_ip, c_key))
+                            conn.commit()
+                            print(f"   ☑️ Checklist mise à jour pour {target_ip} : {module['checklist_keys']}")
+                    except Exception as e:
+                        print(f"⚠️ Error updating checklist for task {task_id}: {e}")
                     # -----------------------------
 
                     # 2. Gestion Multi-step
                     context = json.loads(context_json) if context_json else {}
                     if module and "steps" in module and step_idx < len(module["steps"]):
                         step = module["steps"][step_idx]
-                        if "extract" in step and final_content:
+                        if "extract" in step and step_output:
                             try:
                                 for var, rgx in step["extract"].items():
-                                    m = re.search(rgx, final_content)
+                                    m = re.search(rgx, step_output)
                                     if m: context[var] = m.group(1).strip() if m.lastindex else m.group(0).strip()
                             except: pass
 
@@ -274,7 +282,11 @@ class TaskService:
                     conn.commit()
 
                     # 3. Parsing & Suite
-                    self.result_service.universal_parser(task_id)
+                    try:
+                        self.result_service.universal_parser(task_id)
+                    except Exception as e:
+                        print(f"⚠️ Error parsing task {task_id}: {e}")
+                        
                     self._run_step(task_id)
 
             conn.commit()

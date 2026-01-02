@@ -1,6 +1,7 @@
 id: all_in_one_enum
 name: All-in-One Enumeration
 category: auto
+checklist_keys: ["anon_ftp","anon_smb","anon_ssh","anon_ldap","sec_smb","sec_ldap"]
 description: "Combine several enumeration and no-auth scans."
 inputs:
   - name: target
@@ -37,3 +38,36 @@ steps:
 
   - name: LDAP Security
     command: "nxc ldap {{target}} -u '{{username}}' -p '{{password}}'"
+
+parsing:
+  mode: "text"
+  save_results: true
+  ip_extract: '\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
+  rules:
+    - name: "SMB Signing Désactivé (Relay Possible !)"
+      regex: "SMB.*signing:False"
+      badge: "🔴 [DANGER]"
+    - name: "SMBv1 Activé (EternalBlue ?)"
+      regex: "SMB.*SMBv1:True"
+      badge: "🔴 [CRITIQUE]"
+    - name: "Partage Writable (R/W)"
+      regex: "SMB.*READ,WRITE"
+      badge: "🔴 [DANGER]"
+    - name: "Null Session Activée"
+      regex: "SMB.*Null Auth:True"
+      badge: "🟠 [RISQUE]"
+    - name: "Compte SSH Compromis"
+      regex: 'SSH.*\[\+\]'
+      badge: "🔴 [CRITIQUE]"
+    - name: "FTP Anonyme Activé"
+      regex: 'FTP.*\[\+\]'
+      badge: "🟠 [MOYEN]"
+    - name: "LDAP Null Bind (Anonyme)"
+      regex: 'LDAP.*\[\+\]'
+      badge: "🟠 [MOYEN]"
+    - name: "LDAP Signing NON Forcé (Relay Possible)"
+      regex: "LDAP.*signing:(False|None)"
+      badge: "🔴 [CRITIQUE]"
+    - name: "Channel Binding Désactivé"
+      regex: "LDAP.*channel binding:Never"
+      badge: "🟠 [RISQUE]"
