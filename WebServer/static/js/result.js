@@ -91,7 +91,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const leftContent = document.createElement('div');
                 leftContent.className = 'ip-item-left';
-                leftContent.innerHTML = `<span>${escapeHtml(ipData.ip)}</span>`;
+                
+                // Intégration du nom d'hôte
+                let hostnameDisplay = '';
+                if (ipData.hostname) {
+                    hostnameDisplay = `<span class="hostname">(${escapeHtml(ipData.hostname)})</span>`;
+                }
+                leftContent.innerHTML = `<span>${escapeHtml(ipData.ip)}</span> ${hostnameDisplay}`;
 
                 const vulnCountSpan = document.createElement('span');
                 vulnCountSpan.className = 'vuln-count';
@@ -115,7 +121,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const displayIpDetails = (ipData) => {
-        detailPanelTitle.textContent = ipData.ip;
+        // Mise à jour du titre avec le nom d'hôte
+        let title = ipData.ip;
+        if (ipData.hostname) {
+            title += ` - ${ipData.hostname}`;
+        }
+        detailPanelTitle.textContent = title;
+
         ipDetailsContent.innerHTML = '';
 
         // --- Vulnerabilities Section ---

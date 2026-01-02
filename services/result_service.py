@@ -2,6 +2,7 @@ import re
 import json
 import ipaddress
 import psycopg2
+import socket
 from services.db_connector import get_db_connection
 
 class ResultService:
@@ -266,11 +267,24 @@ class ResultService:
             conn.close()
 
             # 3. Initialize data structure for all valid hosts
-            hosts_data = {ip: {
-                "ip": ip, "vuln_count": 0, "highest_severity": "INFO",
-                "severity_counts": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0},
-                "vulnerabilities": [], "scans": []
-            } for ip in all_host_ips}
+            hosts_data = {}
+            for ip in all_host_ips:
+                hostname = None
+                try:
+                    # Tente de résoudre le nom d'hôte. Le timeout est crucial.
+                    hostname = socket.gethostbyaddr(ip)[0]
+                except (socket.herror, socket.gaierror, socket.timeout):
+                    hostname = None # En cas d'échec, on laisse à None
+                
+                hosts_data[ip] = {
+                    "ip": ip,
+                    "hostname": hostname,
+                    "vuln_count": 0,
+                    "highest_severity": "INFO",
+                    "severity_counts": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0},
+                    "vulnerabilities": [],
+                    "scans": []
+                }
 
             # 4. Process and map vulnerabilities
             for r in vuln_rows:
